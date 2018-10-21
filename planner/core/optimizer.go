@@ -16,7 +16,7 @@ package core
 import (
 	"math"
 
-	"github.com/pingcap/tidb/ast"
+	"github.com/pingcap/parser/ast"
 	"github.com/pingcap/tidb/expression"
 	"github.com/pingcap/tidb/infoschema"
 	"github.com/pingcap/tidb/planner/property"
@@ -33,10 +33,10 @@ var AllowCartesianProduct = true
 
 const (
 	flagPrunColumns uint64 = 1 << iota
-	flagEliminateProjection
 	flagBuildKeyInfo
 	flagDecorrelate
 	flagEliminateAgg
+	flagEliminateProjection
 	flagMaxMinEliminate
 	flagPredicatePushDown
 	flagPartitionProcessor
@@ -46,10 +46,10 @@ const (
 
 var optRuleList = []logicalOptRule{
 	&columnPruner{},
-	&projectionEliminater{},
 	&buildKeySolver{},
 	&decorrelateSolver{},
 	&aggregationEliminator{},
+	&projectionEliminater{},
 	&maxMinEliminator{},
 	&ppdSolver{},
 	&partitionProcessor{},

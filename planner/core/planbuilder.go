@@ -18,17 +18,18 @@ import (
 	"strings"
 
 	"github.com/cznic/mathutil"
-	"github.com/pingcap/tidb/ast"
+	"github.com/pingcap/parser/ast"
+	"github.com/pingcap/parser/model"
+	"github.com/pingcap/parser/mysql"
+	"github.com/pingcap/parser/opcode"
 	"github.com/pingcap/tidb/ddl"
 	"github.com/pingcap/tidb/expression"
 	"github.com/pingcap/tidb/infoschema"
-	"github.com/pingcap/tidb/model"
-	"github.com/pingcap/tidb/mysql"
-	"github.com/pingcap/tidb/parser/opcode"
 	"github.com/pingcap/tidb/planner/property"
 	"github.com/pingcap/tidb/sessionctx"
 	"github.com/pingcap/tidb/table"
 	"github.com/pingcap/tidb/types"
+	"github.com/pingcap/tidb/types/parser_driver"
 	"github.com/pingcap/tidb/util/ranger"
 	"github.com/pkg/errors"
 )
@@ -227,6 +228,9 @@ func (b *PlanBuilder) buildDo(v *ast.DoStmt) (Plan, error) {
 			RetType:  expr.GetType(),
 		})
 	}
+	if dual.schema == nil {
+		dual.schema = expression.NewSchema()
+	}
 	p.SetChildren(dual)
 	p.self = p
 	p.SetSchema(schema)
@@ -258,8 +262,8 @@ func (b *PlanBuilder) buildSet(v *ast.SetStmt) (Plan, error) {
 		}
 		if vars.ExtendValue != nil {
 			assign.ExtendValue = &expression.Constant{
-				Value:   vars.ExtendValue.Datum,
-				RetType: &vars.ExtendValue.Type,
+				Value:   vars.ExtendValue.(*driver.ValueExpr).Datum,
+				RetType: &vars.ExtendValue.(*driver.ValueExpr).Type,
 			}
 		}
 		p.VarAssigns = append(p.VarAssigns, assign)
@@ -396,7 +400,8 @@ func (b *PlanBuilder) buildPrepare(x *ast.PrepareStmt) Plan {
 		Name: x.Name,
 	}
 	if x.SQLVar != nil {
-		p.SQLText, _ = x.SQLVar.GetValue().(string)
+		// TODO: Prepared statement from variable expression do not work as expected.
+		// p.SQLText, _ = x.SQLVar.GetValue().(string)
 	} else {
 		p.SQLText = x.SQLText
 	}
@@ -537,7 +542,7 @@ func (b *PlanBuilder) buildAdmin(as *ast.AdminStmt) (Plan, error) {
 
 func (b *PlanBuilder) buildAdminCheckTable(as *ast.AdminStmt) (*CheckTable, error) {
 	p := &CheckTable{Tables: as.Tables}
-	p.GenExprs = make(map[string]expression.Expression)
+	p.GenExprs = make(map[model.TableColumnID]expression.Expression, len(p.Tables))
 
 	mockTablePlan := LogicalTableDual{}.init(b.ctx)
 	for _, tbl := range p.Tables {
@@ -569,8 +574,7 @@ func (b *PlanBuilder) buildAdminCheckTable(as *ast.AdminStmt) (*CheckTable, erro
 				return nil, errors.Trace(err)
 			}
 			expr = expression.BuildCastFunction(b.ctx, expr, colExpr.GetType())
-			genColumnName := model.GetTableColumnID(tableInfo, column.ColumnInfo)
-			p.GenExprs[genColumnName] = expr
+			p.GenExprs[model.TableColumnID{TableID: tableInfo.ID, ColumnID: column.ColumnInfo.ID}] = expr
 		}
 	}
 	return p, nil
@@ -1272,7 +1276,7 @@ func (b *PlanBuilder) buildValuesListOfInsert(insert *ast.InsertStmt, insertPlan
 				} else {
 					expr, err = b.getDefaultValue(affectedValuesCols[j])
 				}
-			case *ast.ValueExpr:
+			case *driver.ValueExpr:
 				expr = &expression.Constant{
 					Value:   x.Datum,
 					RetType: &x.Type,
@@ -1496,37 +1500,11 @@ func (b *PlanBuilder) buildExplain(explain *ast.ExplainStmt) (Plan, error) {
 			return nil, ErrUnsupportedType.GenWithStackByArgs(targetPlan)
 		}
 	}
-	p := &Explain{StmtPlan: pp, Analyze: explain.Analyze, ExecStmt: explain.Stmt, ExecPlan: targetPlan}
+	p := &Explain{StmtPlan: pp, Analyze: explain.Analyze, Format: explain.Format, ExecStmt: explain.Stmt, ExecPlan: targetPlan}
 	p.ctx = b.ctx
-	p.PrepareRows = func() error {
-		switch strings.ToLower(explain.Format) {
-		case ast.ExplainFormatROW:
-			retFields := []string{"id", "count", "task", "operator info"}
-			if explain.Analyze {
-				retFields = append(retFields, "execution_info")
-			}
-			schema := expression.NewSchema(make([]*expression.Column, 0, len(retFields))...)
-			for _, fieldName := range retFields {
-				schema.Append(buildColumn("", fieldName, mysql.TypeString, mysql.MaxBlobWidth))
-			}
-			p.SetSchema(schema)
-			p.explainedPlans = map[int]bool{}
-			p.explainPlanInRowFormat(p.StmtPlan.(PhysicalPlan), "root", "", true)
-			if explain.Analyze {
-				b.ctx.GetSessionVars().StmtCtx.RuntimeStats = nil
-			}
-		case ast.ExplainFormatDOT:
-			retFields := []string{"dot contents"}
-			schema := expression.NewSchema(make([]*expression.Column, 0, len(retFields))...)
-			for _, fieldName := range retFields {
-				schema.Append(buildColumn("", fieldName, mysql.TypeString, mysql.MaxBlobWidth))
-			}
-			p.SetSchema(schema)
-			p.prepareDotInfo(p.StmtPlan.(PhysicalPlan))
-		default:
-			return errors.Errorf("explain format '%s' is not supported now", explain.Format)
-		}
-		return nil
+	err = p.prepareSchema()
+	if err != nil {
+		return nil, err
 	}
 	return p, nil
 }
@@ -1655,20 +1633,20 @@ func buildShowSchema(s *ast.ShowStmt) (schema *expression.Schema) {
 		ftypes = []byte{mysql.TypeLonglong, mysql.TypeVarchar, mysql.TypeVarchar,
 			mysql.TypeVarchar, mysql.TypeVarchar, mysql.TypeLong, mysql.TypeVarchar, mysql.TypeString, mysql.TypeLonglong}
 	case ast.ShowStatsMeta:
-		names = []string{"Db_name", "Table_name", "Update_time", "Modify_count", "Row_count"}
-		ftypes = []byte{mysql.TypeVarchar, mysql.TypeVarchar, mysql.TypeDatetime, mysql.TypeLonglong, mysql.TypeLonglong}
+		names = []string{"Db_name", "Table_name", "Partition_name", "Update_time", "Modify_count", "Row_count"}
+		ftypes = []byte{mysql.TypeVarchar, mysql.TypeVarchar, mysql.TypeVarchar, mysql.TypeDatetime, mysql.TypeLonglong, mysql.TypeLonglong}
 	case ast.ShowStatsHistograms:
-		names = []string{"Db_name", "Table_name", "Column_name", "Is_index", "Update_time", "Distinct_count", "Null_count", "Avg_col_size"}
-		ftypes = []byte{mysql.TypeVarchar, mysql.TypeVarchar, mysql.TypeVarchar, mysql.TypeTiny, mysql.TypeDatetime,
+		names = []string{"Db_name", "Table_name", "Partition_name", "Column_name", "Is_index", "Update_time", "Distinct_count", "Null_count", "Avg_col_size"}
+		ftypes = []byte{mysql.TypeVarchar, mysql.TypeVarchar, mysql.TypeVarchar, mysql.TypeVarchar, mysql.TypeTiny, mysql.TypeDatetime,
 			mysql.TypeLonglong, mysql.TypeLonglong, mysql.TypeDouble}
 	case ast.ShowStatsBuckets:
-		names = []string{"Db_name", "Table_name", "Column_name", "Is_index", "Bucket_id", "Count",
+		names = []string{"Db_name", "Table_name", "Partition_name", "Column_name", "Is_index", "Bucket_id", "Count",
 			"Repeats", "Lower_Bound", "Upper_Bound"}
-		ftypes = []byte{mysql.TypeVarchar, mysql.TypeVarchar, mysql.TypeVarchar, mysql.TypeTiny, mysql.TypeLonglong,
+		ftypes = []byte{mysql.TypeVarchar, mysql.TypeVarchar, mysql.TypeVarchar, mysql.TypeVarchar, mysql.TypeTiny, mysql.TypeLonglong,
 			mysql.TypeLonglong, mysql.TypeLonglong, mysql.TypeVarchar, mysql.TypeVarchar}
 	case ast.ShowStatsHealthy:
-		names = []string{"Db_name", "Table_name", "Healthy"}
-		ftypes = []byte{mysql.TypeVarchar, mysql.TypeVarchar, mysql.TypeLonglong}
+		names = []string{"Db_name", "Table_name", "Partition_name", "Healthy"}
+		ftypes = []byte{mysql.TypeVarchar, mysql.TypeVarchar, mysql.TypeVarchar, mysql.TypeLonglong}
 	case ast.ShowProfiles: // ShowProfiles is deprecated.
 		names = []string{"Query_ID", "Duration", "Query"}
 		ftypes = []byte{mysql.TypeLong, mysql.TypeDouble, mysql.TypeVarchar}

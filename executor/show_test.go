@@ -19,15 +19,15 @@ import (
 	"time"
 
 	. "github.com/pingcap/check"
+	"github.com/pingcap/parser/auth"
+	"github.com/pingcap/parser/model"
+	"github.com/pingcap/parser/mysql"
 	"github.com/pingcap/tidb/domain"
 	"github.com/pingcap/tidb/meta/autoid"
-	"github.com/pingcap/tidb/model"
-	"github.com/pingcap/tidb/mysql"
 	plannercore "github.com/pingcap/tidb/planner/core"
 	"github.com/pingcap/tidb/session"
 	"github.com/pingcap/tidb/sessionctx"
 	"github.com/pingcap/tidb/sessionctx/variable"
-	"github.com/pingcap/tidb/util/auth"
 	"github.com/pingcap/tidb/util/testkit"
 	"github.com/pingcap/tidb/util/testutil"
 	"github.com/pkg/errors"
@@ -462,6 +462,30 @@ func (s *testSuite) TestShowVisibility(c *C) {
 	tk.MustExec("drop database showdatabase")
 }
 
+func (s *testSuite) TestShowDatabasesInfoSchemaFirst(c *C) {
+	tk := testkit.NewTestKit(c, s.store)
+	tk.MustQuery("show databases").Check(testkit.Rows("INFORMATION_SCHEMA"))
+	tk.MustExec(`create user 'show'@'%'`)
+	tk.MustExec(`flush privileges`)
+
+	tk.MustExec(`create database AAAA`)
+	tk.MustExec(`create database BBBB`)
+	tk.MustExec(`grant select on AAAA.* to 'show'@'%'`)
+	tk.MustExec(`grant select on BBBB.* to 'show'@'%'`)
+	tk.MustExec(`flush privileges`)
+
+	tk1 := testkit.NewTestKit(c, s.store)
+	se, err := session.CreateSession4Test(s.store)
+	c.Assert(err, IsNil)
+	c.Assert(se.Auth(&auth.UserIdentity{Username: "show", Hostname: "%"}, nil, nil), IsTrue)
+	tk1.Se = se
+	tk1.MustQuery("show databases").Check(testkit.Rows("INFORMATION_SCHEMA", "AAAA", "BBBB"))
+
+	tk.MustExec(`drop user 'show'@'%'`)
+	tk.MustExec(`drop database AAAA`)
+	tk.MustExec(`drop database BBBB`)
+}
+
 // mockSessionManager is a mocked session manager that wraps one session
 // it returns only this session's current process info as processlist for test.
 type mockSessionManager struct {
@@ -629,6 +653,25 @@ func (s *testSuite) TestShowTableStatus(c *C) {
 	rows, err = session.GetRows4Test(context.Background(), tk.Se, rs)
 	c.Assert(errors.ErrorStack(err), Equals, "")
 	c.Assert(rows[0].GetString(16), Equals, "partitioned")
+}
+
+func (s *testSuite) TestShowTableStatusCaseInsensitive(c *C) {
+	tk := testkit.NewTestKit(c, s.store)
+
+	tk.MustExec("use test")
+	tk.MustExec(`drop table if exists t;`)
+	tk.MustExec(`create table t(a bigint);`)
+
+	// It's not easy to test the result contents because every time the test runs, "Create_time" changed.
+	rs, err := tk.Exec("SHOW TABLE STATUS like 'T';")
+	c.Assert(errors.ErrorStack(err), Equals, "")
+	c.Assert(rs, NotNil)
+	rows, err := session.GetRows4Test(context.Background(), tk.Se, rs)
+	c.Assert(errors.ErrorStack(err), Equals, "")
+	err = rs.Close()
+	c.Assert(errors.ErrorStack(err), Equals, "")
+
+	c.Assert(rows[0].GetString(0), Equals, "t")
 }
 
 func (s *testSuite) TestShowSlow(c *C) {
