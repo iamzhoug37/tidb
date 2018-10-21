@@ -57,8 +57,8 @@ type Context interface {
 	// now just for load data and batch insert.
 	RefreshTxnCtx(context.Context) error
 
-	// ActivePendingTxn receives the pending transaction from the transaction channel.
-	// It should be called right before we builds an executor.
+	// ActivePendingTxn receives the pending transaction from the transaction channel.   ActivePendingTxn从transcationchannel里面接收挂起的transcation
+	// It should be called right before we builds an executor.							他应该在我们创建executor之前正确调用
 	ActivePendingTxn() error
 
 	// InitTxnWithStartTS initializes a transaction with startTS.

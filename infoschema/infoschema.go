@@ -60,7 +60,7 @@ var (
 	ErrTooManyKeyParts = terror.ClassSchema.New(codeTooManyKeyParts, "Too many key parts specified; max %d parts allowed")
 )
 
-// InfoSchema is the interface used to retrieve the schema information.
+// InfoSchema is the interface used to retrieve the schema information.  InfoSchema是一个用来接收schema信息的接口
 // It works as a in memory cache and doesn't handle any schema change.
 // InfoSchema is read-only, and the returned value is a copy.
 // TODO: add more methods to retrieve tables and columns.

@@ -63,11 +63,11 @@ func (s SchemaState) String() string {
 	}
 }
 
-// ColumnInfo provides meta data describing of a table column.
+// ColumnInfo provides meta data describing of a table column.  描述一个表列的元数据信息
 type ColumnInfo struct {
-	ID                  int64               `json:"id"`
-	Name                CIStr               `json:"name"`
-	Offset              int                 `json:"offset"`
+	ID                  int64               `json:"id"` 	//第几列
+	Name                CIStr               `json:"name"`	//列名(case不敏感)
+	Offset              int                 `json:"offset"`	//偏移量
 	OriginDefaultValue  interface{}         `json:"origin_default"`
 	DefaultValue        interface{}         `json:"default"`
 	DefaultValueBit     []byte              `json:"default_bit"`
@@ -76,7 +76,7 @@ type ColumnInfo struct {
 	Dependences         map[string]struct{} `json:"dependences"`
 	types.FieldType     `json:"type"`
 	State               SchemaState `json:"state"`
-	Comment             string      `json:"comment"`
+	Comment             string      `json:"comment"`		//解释
 }
 
 // Clone clones ColumnInfo.
@@ -138,7 +138,7 @@ const ExtraHandleID = -1
 // ExtraHandleName is the name of ExtraHandle Column.
 var ExtraHandleName = NewCIStr("_tidb_rowid")
 
-// TableInfo provides meta data describing a DB table.
+// TableInfo provides meta data describing a DB table. 用来描述一个DB的元数据信息
 type TableInfo struct {
 	ID      int64  `json:"id"`
 	Name    CIStr  `json:"name"`
@@ -451,7 +451,7 @@ func (db *DBInfo) Copy() *DBInfo {
 	return &newInfo
 }
 
-// CIStr is case insensitive string.
+// CIStr is case insensitive string. 对于大小写不敏感的字符串
 type CIStr struct {
 	O string `json:"O"` // Original string.
 	L string `json:"L"` // Lower case string.

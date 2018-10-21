@@ -75,7 +75,7 @@ func (c *column) isNull(rowIdx int) bool {
 func (c *column) appendNullBitmap(notNull bool) {
 	idx := c.length >> 3
 	if idx >= len(c.nullBitmap) {
-		c.nullBitmap = append(c.nullBitmap, 0)
+		c.nullBitmap = append(c.nullBitmap, 0) //bitMap里面放入了一个元素
 	}
 	if notNull {
 		pos := uint(c.length) & 7
@@ -114,9 +114,9 @@ func (c *column) appendMultiSameNullBitmap(notNull bool, num int) {
 func (c *column) appendNull() {
 	c.appendNullBitmap(false)
 	if c.isFixed() {
-		c.data = append(c.data, c.elemBuf...)
+		c.data = append(c.data, c.elemBuf...) //定长的，append占位符
 	} else {
-		c.offsets = append(c.offsets, c.offsets[c.length])
+		c.offsets = append(c.offsets, c.offsets[c.length])	//只是把当前的length作为下一次的写入
 	}
 	c.length++
 }
@@ -148,13 +148,13 @@ func (c *column) appendFloat64(f float64) {
 }
 
 func (c *column) finishAppendVar() {
-	c.appendNullBitmap(true)
-	c.offsets = append(c.offsets, int32(len(c.data)))
+	c.appendNullBitmap(true)//写入not null的bit map中(表示写入了一个非null元素)
+	c.offsets = append(c.offsets, int32(len(c.data)))//把当前的大小作为下一次写入的offset
 	c.length++
 }
 
 func (c *column) appendString(str string) {
-	c.data = append(c.data, str...)
+	c.data = append(c.data, str...) //把str写到data里面
 	c.finishAppendVar()
 }
 

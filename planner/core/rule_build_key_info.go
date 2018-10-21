@@ -26,7 +26,7 @@ func (s *buildKeySolver) optimize(lp LogicalPlan) (LogicalPlan, error) {
 	return lp, nil
 }
 
-func (la *LogicalAggregation) buildKeyInfo() {
+func (la *LogicalAggregation) buildKeyInfo() {//构建 unique key 和 MaxOneRow 属性。这一步不是在做优化，但它是在构建优化过程需要用到的一些信息
 	la.schema.Keys = nil
 	la.baseLogicalPlan.buildKeyInfo()
 	for _, key := range la.Children()[0].Schema().Keys {

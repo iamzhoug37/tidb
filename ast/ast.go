@@ -27,14 +27,14 @@ import (
 // Node is the basic element of the AST.
 // Interfaces embed Node should have 'Node' name suffix.
 type Node interface {
-	// Accept accepts Visitor to visit itself.
-	// The returned node should replace original node.
-	// ok returns false to stop visiting.
+	// Accept accepts Visitor to visit itself. 接受visitor对node节点的访问
+	// The returned node should replace original node.  返回的节点应该可以替换原有的节点
+	// ok returns false to stop visiting.	如果ok返回的是false，停止访问
 	//
-	// Implementation of this method should first call visitor.Enter,
-	// assign the returned node to its method receiver, if skipChildren returns true,
-	// children should be skipped. Otherwise, call its children in particular order that
-	// later elements depends on former elements. Finally, return visitor.Leave.
+	// Implementation of this method should first call visitor.Enter,   这个方法的实现应该首先访问visitor的enter方法
+	// assign the returned node to its method receiver, if skipChildren returns true, 分配返回的节点给这个方法的调用者，如果accept返回的skipChildren为true，那么子节点应该被跳过
+	// children should be skipped. Otherwise, call its children in particular order that 否则调用他的孩子按照特定的顺序，依赖的顺序是后面的元素的依赖于前面的元素。
+	// later elements depends on former elements. Finally, return visitor.Leave.   最后返回visitor.Leave
 	Accept(v Visitor) (node Node, ok bool)
 	// Text returns the original text of the element.
 	Text() string
@@ -55,7 +55,7 @@ const (
 	FlagPreEvaluated
 )
 
-// ExprNode is a node that can be evaluated.
+// ExprNode is a node that can be evaluated.  ExprNode是一个可以被计算的node；他的实现拥有Expr的后缀
 // Name of implementations should have 'Expr' suffix.
 type ExprNode interface {
 	// Node is embedded in ExprNode.
@@ -98,7 +98,7 @@ type FuncNode interface {
 // StmtNode represents statement node.
 // Name of implementations should have 'Stmt' suffix.
 type StmtNode interface {
-	Node
+	Node	//继承了Node接口
 	statement()
 }
 
@@ -138,7 +138,7 @@ type ResultField struct {
 	Referenced bool
 }
 
-// RecordSet is an abstract result set interface to help get data from Plan.
+// RecordSet is an abstract result set interface to help get data from Plan. recordSet是一个结果集接口，来帮助从plan中获取data的
 type RecordSet interface {
 	// Fields gets result fields.
 	Fields() []*ResultField
@@ -200,10 +200,10 @@ type Statement interface {
 
 // Visitor visits a Node.
 type Visitor interface {
-	// Enter is called before children nodes are visited.
-	// The returned node must be the same type as the input node n.
-	// skipChildren returns true means children nodes should be skipped,
-	// this is useful when work is done in Enter and there is no need to visit children.
+	// Enter is called before children nodes are visited.   enter应该在子节点被访问前调用
+	// The returned node must be the same type as the input node n.   返回的节点应该和输入的节点相同
+	// skipChildren returns true means children nodes should be skipped,   如果返回skipChild为true，那么子节点应该被跳过
+	// this is useful when work is done in Enter and there is no need to visit children.   当工作在enter中被完成，没有必要继续访问子节点的时候这个参数很有用
 	Enter(n Node) (node Node, skipChildren bool)
 	// Leave is called after children nodes have been visited.
 	// The returned node's type can be different from the input node if it is a ExprNode,

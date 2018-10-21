@@ -18,7 +18,7 @@ import (
 	"github.com/pingcap/tidb/types"
 )
 
-var (
+var ( //ddl接口定义以及实现
 	_ DDLNode = &AlterTableStmt{}
 	_ DDLNode = &CreateDatabaseStmt{}
 	_ DDLNode = &CreateIndexStmt{}

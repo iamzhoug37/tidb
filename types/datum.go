@@ -55,8 +55,8 @@ const (
 	KindMysqlJSON     byte = 18
 )
 
-// Datum is a data box holds different kind of data.
-// It has better performance and is easier to use than `interface{}`.
+// Datum is a data box holds different kind of data.  基准？是一个data box，里面有各种各样的数据类型
+// It has better performance and is easier to use than `interface{}`.  比interface的性能要好，且更加易用
 type Datum struct {
 	k         byte        // datum kind.
 	collation uint8       // collation can hold uint8 values.

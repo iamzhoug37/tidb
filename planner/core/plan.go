@@ -25,7 +25,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Plan is the description of an execution flow.
+// Plan is the description of an execution flow.  plan是一个执行流的描述
 // It is created from ast.Node first, then optimized by the optimizer,
 // finally used by the executor to create a Cursor which executes the statement.
 type Plan interface {
@@ -67,7 +67,7 @@ type LogicalPlan interface {
 	// Because it might change the root if the having clause exists, we need to return a plan that represents a new root.
 	PredicatePushDown([]expression.Expression) ([]expression.Expression, LogicalPlan)
 
-	// PruneColumns prunes the unused columns.
+	// PruneColumns prunes the unused columns. 裁剪无用的列
 	PruneColumns([]*expression.Column)
 
 	// findBestTask converts the logical plan to the physical plan. It's a new interface.

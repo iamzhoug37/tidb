@@ -239,7 +239,7 @@ func (c *Chunk) AppendPartialRow(colIdx int, row Row) {
 	}
 }
 
-// Append appends rows in [begin, end) in another Chunk to a Chunk.
+// Append appends rows in [begin, end) in another Chunk to a Chunk.  从一个chunk拷贝到另外一个chunk
 func (c *Chunk) Append(other *Chunk, begin, end int) {
 	for colID, src := range other.columns {
 		dst := c.columns[colID]

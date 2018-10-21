@@ -24,7 +24,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Vectorizable checks whether a list of expressions can employ vectorized execution.
+// Vectorizable checks whether a list of expressions can employ vectorized execution.  这个函数用来检查这一系列的expression是否可以矢量执行
 func Vectorizable(exprs []Expression) bool {
 	for _, expr := range exprs {
 		if hasUnVectorizableFunc(expr) {
@@ -228,9 +228,9 @@ func executeToString(ctx sessionctx.Context, expr Expression, fieldType *types.F
 	return nil
 }
 
-// VectorizedFilter applies a list of filters to a Chunk and
-// returns a bool slice, which indicates whether a row is passed the filters.
-// Filters is executed vectorized.
+// VectorizedFilter applies a list of filters to a Chunk and  VectorizedFilter在chunk上面使用一个过滤器链
+// returns a bool slice, which indicates whether a row is passed the filters.  返回了一个bool slice，这个slice表明一个row是否通过了filters
+// Filters is executed vectorized.		filters是串行执行的
 func VectorizedFilter(ctx sessionctx.Context, filters []Expression, iterator *chunk.Iterator4Chunk, selected []bool) ([]bool, error) {
 	selected = selected[:0]
 	for i, numRows := 0, iterator.Len(); i < numRows; i++ {
@@ -246,11 +246,11 @@ func VectorizedFilter(ctx sessionctx.Context, filters []Expression, iterator *ch
 				continue
 			}
 			if isIntType {
-				filterResult, isNull, err := filter.EvalInt(ctx, row)
+				filterResult, isNull, err := filter.EvalInt(ctx, row)	//filterResult为计算结果
 				if err != nil {
 					return nil, errors.Trace(err)
 				}
-				selected[row.Idx()] = selected[row.Idx()] && !isNull && (filterResult != 0)
+				selected[row.Idx()] = selected[row.Idx()] && !isNull && (filterResult != 0)	//把计算结果是否选中设置到selected里面
 			} else {
 				// TODO: should rewrite the filter to `cast(expr as SIGNED) != 0` and always use `EvalInt`.
 				bVal, err := EvalBool(ctx, []Expression{filter}, row)

@@ -73,7 +73,7 @@ type baseExecutor struct {
 	retFieldTypes []*types.FieldType
 }
 
-// Open initializes children recursively and "childrenResults" according to children's schemas.
+// Open initializes children recursively and "childrenResults" according to children's schemas.  open根据孩子们的schema递归初始化了孩子们
 func (e *baseExecutor) Open(ctx context.Context) error {
 	for _, child := range e.children {
 		err := child.Open(ctx)
@@ -137,7 +137,7 @@ func newBaseExecutor(ctx sessionctx.Context, schema *expression.Schema, id strin
 	return e
 }
 
-// Executor is the physical implementation of a algebra operator.
+// Executor is the physical implementation of a algebra operator.  executor是一个代数操作的具体实现
 //
 // In TiDB, all algebra operators are implemented as iterators, i.e., they
 // support a simple Open-Next-Close protocol. See this paper for more details:
@@ -744,7 +744,7 @@ func (e *TableDualExec) Next(ctx context.Context, chk *chunk.Chunk) error {
 	return nil
 }
 
-// SelectionExec represents a filter executor.
+// SelectionExec represents a filter executor.   过滤的executor
 type SelectionExec struct {
 	baseExecutor
 
@@ -804,7 +804,7 @@ func (e *SelectionExec) Next(ctx context.Context, chk *chunk.Chunk) error {
 		if e.childResult.NumRows() == 0 {
 			return nil
 		}
-		e.selected, err = expression.VectorizedFilter(e.ctx, e.filters, e.inputIter, e.selected)
+		e.selected, err = expression.VectorizedFilter(e.ctx, e.filters, e.inputIter, e.selected)	//真正执行的地方了
 		if err != nil {
 			return errors.Trace(err)
 		}

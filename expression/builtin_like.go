@@ -14,7 +14,10 @@
 package expression
 
 import (
+	"github.com/pingcap/tidb/sessionctx/variable"
 	"regexp"
+	"strconv"
+	"strings"
 
 	"github.com/pingcap/tidb/sessionctx"
 	"github.com/pingcap/tidb/types"
@@ -71,7 +74,7 @@ func (b *builtinLikeSig) evalInt(row chunk.Row) (int64, bool, error) {
 	}
 
 	// TODO: We don't need to compile pattern if it has been compiled or it is static.
-	patternStr, isNull, err := b.args[1].EvalString(b.ctx, row)
+	patternStr, isNull, err := b.args[1].EvalString(b.ctx, row)	//传参传进来的那个模式字符串 't1'或者'T1'
 	if isNull || err != nil {
 		return 0, isNull, errors.Trace(err)
 	}
@@ -79,10 +82,17 @@ func (b *builtinLikeSig) evalInt(row chunk.Row) (int64, bool, error) {
 	if isNull || err != nil {
 		return 0, isNull, errors.Trace(err)
 	}
-	escape := byte(val)
-	patChars, patTypes := stringutil.CompilePattern(patternStr, escape)
-	match := stringutil.DoMatch(valStr, patChars, patTypes)
-	return boolToInt64(match), false, nil
+	escape := byte(val)	//转义字符，肯定是0~255
+
+	lowerCaseTableName,_ := strconv.Atoi(variable.SysVars["lower_case_table_names"].Value)
+	if lowerCaseTableName == 2 {
+		patternStr = strings.ToLower(patternStr)
+		valStr = strings.ToLower(valStr)
+	}
+
+	patChars, patTypes := stringutil.CompilePattern(patternStr, escape)		//这个是根据传进来的模式字符串生成了一个匹配器(patChars, patTypes)
+	match := stringutil.DoMatch(valStr, patChars, patTypes)					//真正做匹配的地方
+	return boolToInt64(match), false, nil	//把bool转换为int64了
 }
 
 type regexpFunctionClass struct {

@@ -39,7 +39,7 @@ const (
 // EvalAstExpr evaluates ast expression directly.
 var EvalAstExpr func(ctx sessionctx.Context, expr ast.ExprNode) (types.Datum, error)
 
-// Expression represents all scalar expression in SQL.
+// Expression represents all scalar expression in SQL.  Expression代表sql中所有的纯量表达式
 type Expression interface {
 	fmt.Stringer
 	goJSON.Marshaler
@@ -47,7 +47,7 @@ type Expression interface {
 	// Eval evaluates an expression through a row.
 	Eval(row chunk.Row) (types.Datum, error)
 
-	// EvalInt returns the int64 representation of expression.
+	// EvalInt returns the int64 representation of expression.  返回这个表达式的int64
 	EvalInt(ctx sessionctx.Context, row chunk.Row) (val int64, isNull bool, err error)
 
 	// EvalReal returns the float64 representation of expression.

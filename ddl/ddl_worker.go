@@ -31,7 +31,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 )
-
+//ddl worker的实现
 var (
 	// RunWorker indicates if this TiDB server starts DDL worker and can run DDL job.
 	RunWorker = true

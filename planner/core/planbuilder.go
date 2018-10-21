@@ -995,7 +995,7 @@ func (b *planBuilder) resolveGeneratedColumns(columns []*table.Column, onDups ma
 	return igc, nil
 }
 
-func (b *planBuilder) buildInsert(insert *ast.InsertStmt) (Plan, error) {
+func (b *planBuilder) buildInsert(insert *ast.InsertStmt) (Plan, error) {//构建一个insert请求
 	ts, ok := insert.Table.TableRefs.Left.(*ast.TableSource)
 	if !ok {
 		return nil, infoschema.ErrTableNotExists.GenWithStackByArgs()

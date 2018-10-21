@@ -940,11 +940,11 @@ type ShowStmtType int
 
 // Show statement types.
 const (
-	ShowNone = iota
-	ShowEngines
-	ShowDatabases
-	ShowTables
-	ShowTableStatus
+	ShowNone = iota			//0
+	ShowEngines				//1
+	ShowDatabases			//2
+	ShowTables				//3
+	ShowTableStatus			//4
 	ShowColumns
 	ShowWarnings
 	ShowCharset
@@ -976,7 +976,7 @@ type ShowStmt struct {
 	dmlNode
 	resultSetNode
 
-	Tp     ShowStmtType // Databases/Tables/Columns/....
+	Tp     ShowStmtType // Databases/Tables/Columns/....  哪一种show，show的类型
 	DBName string
 	Table  *TableName  // Used for showing columns.
 	Column *ColumnName // Used for `desc table column`.

@@ -280,7 +280,7 @@ type Deallocate struct {
 	Name string
 }
 
-// Show represents a show plan.
+// Show represents a show plan.  show语句的一个计划
 type Show struct {
 	baseSchemaProducer
 

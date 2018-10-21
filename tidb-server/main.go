@@ -123,20 +123,20 @@ var (
 )
 
 func main() {
-	flag.Parse()
+	flag.Parse()		//go对命令行的解析，看起来像是对传入参数的解析
 	if *version {
 		fmt.Println(printer.GetTiDBInfo())
 		os.Exit(0)
 	}
 	registerStores()
-	registerMetrics()
-	loadConfig()
-	overrideConfig()
-	validateConfig()
-	setGlobalVars()
+	registerMetrics() //注册监控
+	loadConfig()	  //加载配置
+	overrideConfig()//用启动参数来覆盖配置
+	validateConfig()//验证配置
+	setGlobalVars()//设置全局变量
 	setupLog()
 	setupTracing() // Should before createServer and after setup config.
-	printInfo()
+	printInfo() //打印tidb的基本信息
 	setupBinlogClient()
 	setupMetrics()
 	createStoreAndDomain()
@@ -148,10 +148,10 @@ func main() {
 }
 
 func registerStores() {
-	err := session.RegisterStore("tikv", tikv.Driver{})
+	err := session.RegisterStore("tikv", tikv.Driver{})//注册了tikv存储
 	terror.MustNil(err)
-	tikv.NewGCHandlerFunc = gcworker.NewGCWorker
-	err = session.RegisterStore("mocktikv", mockstore.MockDriver{})
+	tikv.NewGCHandlerFunc = gcworker.NewGCWorker //创建了一个gcWorker
+	err = session.RegisterStore("mocktikv", mockstore.MockDriver{})//注册了一个mockStore的kv
 	terror.MustNil(err)
 }
 
@@ -165,7 +165,7 @@ func createStoreAndDomain() {
 	storage, err = session.NewStore(fullPath)
 	terror.MustNil(err)
 	// Bootstrap a session to load information schema.
-	dom, err = session.BootstrapSession(storage)
+	dom, err = session.BootstrapSession(storage) //启动了这个storage吧应该是
 	terror.MustNil(err)
 }
 
@@ -252,7 +252,7 @@ func flagBoolean(name string, defaultVal bool, usage string) *bool {
 
 func loadConfig() {
 	cfg = config.GetGlobalConfig()
-	if *configPath != "" {
+	if *configPath != "" {//命令行里面的config配置不为空，就加载这个配置文件
 		err := cfg.Load(*configPath)
 		terror.MustNil(err)
 	}
@@ -390,7 +390,7 @@ func setGlobalVars() {
 	variable.ForcePriority = int32(mysql.Str2Priority(cfg.Performance.ForcePriority))
 
 	variable.SysVars[variable.TIDBMemQuotaQuery].Value = strconv.FormatInt(cfg.MemQuotaQuery, 10)
-	variable.SysVars["lower_case_table_names"].Value = strconv.Itoa(cfg.LowerCaseTableNames)
+	variable.SysVars["lower_case_table_names"].Value = strconv.Itoa(cfg.LowerCaseTableNames)//用的还是这个cfg里面的lower_case_table_names
 
 	plannercore.SetPreparedPlanCache(cfg.PreparedPlanCache.Enabled)
 	if plannercore.PreparedPlanCacheEnabled() {

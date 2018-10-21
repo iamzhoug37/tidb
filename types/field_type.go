@@ -30,7 +30,7 @@ const (
 	UnspecifiedLength = -1
 )
 
-// FieldType records field type information.
+// FieldType records field type information.  变量类型信息
 type FieldType struct {
 	Tp      byte
 	Flag    uint

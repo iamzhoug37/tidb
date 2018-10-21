@@ -465,13 +465,13 @@ func (t *tableCommon) AddRecord(ctx sessionctx.Context, r []types.Datum, skipHan
 	}
 	writeBufs := sessVars.GetWriteStmtBufs()
 	adjustRowValuesBuf(writeBufs, len(row))
-	key := t.RecordKey(recordID)
-	writeBufs.RowValBuf, err = tablecodec.EncodeRow(ctx.GetSessionVars().StmtCtx, row, colIDs, writeBufs.RowValBuf, writeBufs.AddRowValues)
+	key := t.RecordKey(recordID)//构造key
+	writeBufs.RowValBuf, err = tablecodec.EncodeRow(ctx.GetSessionVars().StmtCtx, row, colIDs, writeBufs.RowValBuf, writeBufs.AddRowValues) //构造value
 	if err != nil {
 		return 0, errors.Trace(err)
 	}
 	value := writeBufs.RowValBuf
-	if err = txn.Set(key, value); err != nil {
+	if err = txn.Set(key, value); err != nil { //将kv写到缓存里面
 		return 0, errors.Trace(err)
 	}
 	if !sessVars.LightningMode {

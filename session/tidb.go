@@ -145,7 +145,7 @@ func runStmt(ctx context.Context, sctx sessionctx.Context, s ast.Statement) (ast
 	var err error
 	var rs ast.RecordSet
 	se := sctx.(*session)
-	rs, err = s.Exec(ctx)
+	rs, err = s.Exec(ctx) //事务型执行(这个地方并没有执行)
 	// All the history should be added here.
 	se.GetSessionVars().TxnCtx.StatementCount++
 	if !s.IsReadOnly() {
@@ -156,7 +156,7 @@ func runStmt(ctx context.Context, sctx sessionctx.Context, s ast.Statement) (ast
 			if err != nil {
 				sctx.StmtRollback()
 			} else {
-				sctx.StmtCommit()
+				sctx.StmtCommit() //和这些有很大关系感觉起来
 			}
 		}
 	}

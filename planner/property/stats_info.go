@@ -19,7 +19,7 @@ import (
 	"github.com/pingcap/tidb/statistics"
 )
 
-// StatsInfo stores the basic information of statistics for the plan's output. It is used for cost estimation.
+// StatsInfo stores the basic information of statistics for the plan's output. It is used for cost estimation.  统计信息，用来计算代价
 type StatsInfo struct {
 	RowCount    float64
 	Cardinality []float64

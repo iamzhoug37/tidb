@@ -433,12 +433,12 @@ func (cc *clientConn) Run() {
 		}
 	}()
 
-	// Usually, client connection status changes between [dispatching] <=> [reading].
-	// When some event happens, server may notify this client connection by setting
+	// Usually, client connection status changes between [dispatching] <=> [reading].		通常而言，客户端连接的状态在dispatching与reading状态在切换
+	// When some event happens, server may notify this client connection by setting			当某些事件发生后，server也许需要通过设置状态为一个特殊的值，来notify这个客户端连接,例如kill或者优雅关闭
 	// the status to special values, for example: kill or graceful shutdown.
-	// The client connection would detect the events when it fails to change status
+	// The client connection would detect the events when it fails to change status			当他无法改通过CAS改变状态的时候，客户端连接将会检测这个事件，他会采取一些措施
 	// by CAS operation, it would then take some actions accordingly.
-	for {
+	for {//死循环
 		if atomic.CompareAndSwapInt32(&cc.status, connStatusDispatching, connStatusReading) == false {
 			if atomic.LoadInt32(&cc.status) == connStatusShutdown {
 				closedOutside = true
@@ -447,7 +447,7 @@ func (cc *clientConn) Run() {
 		}
 
 		cc.alloc.Reset()
-		data, err := cc.readPacket()
+		data, err := cc.readPacket() //读包
 		if err != nil {
 			if terror.ErrorNotEqual(err, io.EOF) {
 				errStack := errors.ErrorStack(err)
@@ -467,7 +467,7 @@ func (cc *clientConn) Run() {
 		}
 
 		startTime := time.Now()
-		if err = cc.dispatch(data); err != nil {
+		if err = cc.dispatch(data); err != nil { //dispatch处理这个请求
 			if terror.ErrorEqual(err, io.EOF) {
 				cc.addMetrics(data[0], startTime, nil)
 				return
@@ -584,7 +584,7 @@ func (cc *clientConn) dispatch(data []byte) error {
 	cc.mu.cancelFunc = cancelFunc
 	cc.mu.Unlock()
 
-	cmd := data[0]
+	cmd := data[0]//mysql协议中的命令类型
 	data = data[1:]
 	cc.lastCmd = hack.String(data)
 	token := cc.server.getToken()
@@ -601,7 +601,7 @@ func (cc *clientConn) dispatch(data []byte) error {
 		return nil
 	case mysql.ComQuit:
 		return io.EOF
-	case mysql.ComQuery: // Most frequently used command.
+	case mysql.ComQuery: // Most frequently used command. 最常用的命令
 		// For issue 1989
 		// Input payload may end with byte '\0', we didn't find related mysql document about it, but mysql
 		// implementation accept that case. So trim the last '\0' here as if the payload an EOF string.
@@ -858,19 +858,19 @@ func (cc *clientConn) handleLoadStats(ctx context.Context, loadStatsInfo *execut
 	return errors.Trace(loadStatsInfo.Update(prevData))
 }
 
-// handleQuery executes the sql query string and writes result set or result ok to the client.
-// As the execution time of this function represents the performance of TiDB, we do time log and metrics here.
+// handleQuery executes the sql query string and writes result set or result ok to the client.  handleQuery 执行了sql，并把结果返回给客户端
+// As the execution time of this function represents the performance of TiDB, we do time log and metrics here.  这个函数的执行代表着tidb的性能，我们应该对这个函数做监控
 // There is a special query `load data` that does not return result, which is handled differently.
 // Query `load stats` does not return result either.
 func (cc *clientConn) handleQuery(ctx context.Context, sql string) (err error) {
-	rs, err := cc.ctx.Execute(ctx, sql)
+	rs, err := cc.ctx.Execute(ctx, sql)//执行sql
 	if err != nil {
 		metrics.ExecuteErrorCounter.WithLabelValues(metrics.ExecuteErrorToLabel(err)).Inc()
 		return errors.Trace(err)
 	}
 	if rs != nil {
 		if len(rs) == 1 {
-			err = cc.writeResultset(ctx, rs[0], false, 0, 0)
+			err = cc.writeResultset(ctx, rs[0], false, 0, 0) //把响应发出去
 		} else {
 			err = cc.writeMultiResultset(ctx, rs, false)
 		}
@@ -924,7 +924,7 @@ func (cc *clientConn) handleFieldList(sql string) (err error) {
 	return errors.Trace(cc.flush())
 }
 
-// writeResultset writes data into a resultset and uses rs.Next to get row data back.
+// writeResultset writes data into a resultset and uses rs.Next to get row data back.  官网上管这个叫协议层出口
 // If binary is true, the data would be encoded in BINARY format.
 // serverStatus, a flag bit represents server information.
 // fetchSize, the desired number of rows to be fetched each time when client uses cursor.

@@ -150,7 +150,7 @@ func (ib *WriteStmtBufs) clean() {
 	ib.IndexKeyBuf = nil
 }
 
-// SessionVars is to handle user-defined or global variables in the current session.
+// SessionVars is to handle user-defined or global variables in the current session. 当前session的全局变量
 type SessionVars struct {
 	Concurrency
 	MemQuota
@@ -227,11 +227,11 @@ type SessionVars struct {
 	// InRestrictedSQL indicates if the session is handling restricted SQL execution.
 	InRestrictedSQL bool
 
-	// SnapshotTS is used for reading history data. For simplicity, SnapshotTS only supports distsql request.
+	// SnapshotTS is used for reading history data. For simplicity, SnapshotTS only supports distsql request. 用来读取历史数据的，只支持distSql(分布式计算的抽象，将Executor与TIKV client的逻辑分离)
 	SnapshotTS uint64
 
 	// SnapshotInfoschema is used with SnapshotTS, when the schema version at snapshotTS less than current schema
-	// version, we load an old version schema for query.
+	// version, we load an old version schema for query. snapshotInfoschema是配合SnapshotTS使用，当snapshotTS的schema的version小于当前的schema version
 	SnapshotInfoschema interface{}
 
 	// BinlogClient is used to write binlog.

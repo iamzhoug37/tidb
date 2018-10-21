@@ -28,11 +28,11 @@ import (
 type ScopeFlag uint8
 
 const (
-	// ScopeNone means the system variable can not be changed dynamically.
+	// ScopeNone means the system variable can not be changed dynamically.  不允许动态修改
 	ScopeNone ScopeFlag = 0
-	// ScopeGlobal means the system variable can be changed globally.
+	// ScopeGlobal means the system variable can be changed globally.		全局可修改
 	ScopeGlobal ScopeFlag = 1 << 0
-	// ScopeSession means the system variable can only be changed in current session.
+	// ScopeSession means the system variable can only be changed in current session.		session粒度可修改
 	ScopeSession ScopeFlag = 1 << 1
 )
 
@@ -358,7 +358,7 @@ var defaultSysVars = []*SysVar{
 	{ScopeNone, "port", "3306"},
 	{ScopeNone, "performance_schema_digests_size", "10000"},
 	{ScopeGlobal | ScopeSession, "profiling", "OFF"},
-	{ScopeNone, "lower_case_table_names", "2"},
+	{ScopeNone, "lower_case_table_names", "2"}, //https://dev.mysql.com/doc/refman/5.7/en/identifier-case-sensitivity.html
 	{ScopeSession, "rand_seed1", ""},
 	{ScopeGlobal, "sha256_password_proxy_users", ""},
 	{ScopeGlobal | ScopeSession, "sql_quote_show_create", "ON"},

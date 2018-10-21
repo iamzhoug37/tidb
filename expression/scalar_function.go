@@ -31,7 +31,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// ScalarFunction is the function that returns a value.
+// ScalarFunction is the function that returns a value.  纯量计算是一个返回一个value的函数
 type ScalarFunction struct {
 	FuncName model.CIStr
 	// RetType is the type that ScalarFunction returns.
@@ -198,7 +198,7 @@ func (sf *ScalarFunction) Eval(row chunk.Row) (d types.Datum, err error) {
 }
 
 // EvalInt implements Expression interface.
-func (sf *ScalarFunction) EvalInt(ctx sessionctx.Context, row chunk.Row) (int64, bool, error) {
+func (sf *ScalarFunction) EvalInt(ctx sessionctx.Context, row chunk.Row) (int64, bool, error) { //ScalarFunction主要依赖他的function去计算的，本身不会算
 	return sf.Function.evalInt(row)
 }
 

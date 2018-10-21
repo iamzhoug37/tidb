@@ -229,7 +229,7 @@ func (tc *TiDBContext) WarningCount() uint16 {
 
 // Execute implements QueryCtx Execute method.
 func (tc *TiDBContext) Execute(ctx context.Context, sql string) (rs []ResultSet, err error) {
-	rsList, err := tc.session.Execute(ctx, sql)
+	rsList, err := tc.session.Execute(ctx, sql) //执行sql
 	if err != nil {
 		return
 	}

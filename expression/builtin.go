@@ -256,7 +256,7 @@ func newBaseBuiltinCastFunc(builtinFunc baseBuiltinFunc, inUnion bool) baseBuilt
 	}
 }
 
-// builtinFunc stands for a particular function signature.
+// builtinFunc stands for a particular function signature.  内置函数代表了特定了函数签名
 type builtinFunc interface {
 	// evalInt evaluates int result of builtinFunc by given row.
 	evalInt(row chunk.Row) (val int64, isNull bool, err error)

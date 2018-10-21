@@ -37,7 +37,7 @@ import (
 	"github.com/pingcap/tidb/util/charset"
 	"github.com/pkg/errors"
 )
-
+//ddl的操作api
 func (d *ddl) CreateSchema(ctx sessionctx.Context, schema model.CIStr, charsetInfo *ast.CharsetOpt) (err error) {
 	is := d.GetInformationSchema(ctx)
 	_, ok := is.SchemaByName(schema)

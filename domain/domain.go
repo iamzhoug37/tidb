@@ -46,8 +46,8 @@ import (
 	"google.golang.org/grpc/keepalive"
 )
 
-// Domain represents a storage space. Different domains can use the same database name.
-// Multiple domains can be used in parallel without synchronization.
+// Domain represents a storage space. Different domains can use the same database name.  domain代表一个存储空间。不同的domain可以使用相同的数据库名字
+// Multiple domains can be used in parallel without synchronization.   多个domain可以在不使用同步的情况下并行使用
 type Domain struct {
 	store           kv.Storage
 	infoHandle      *infoschema.Handle
@@ -511,7 +511,7 @@ type EtcdBackend interface {
 
 const resourceIdleTimeout = 3 * time.Minute // resources in the ResourcePool will be recycled after idleTimeout
 
-// NewDomain creates a new domain. Should not create multiple domains for the same store.
+// NewDomain creates a new domain. Should not create multiple domains for the same store.  创建一个domain，不应该为同一个store创建多个domain
 func NewDomain(store kv.Storage, ddlLease time.Duration, statsLease time.Duration, factory pools.Factory) *Domain {
 	capacity := 200 // capacity of the sysSessionPool size
 	return &Domain{
@@ -609,10 +609,10 @@ func (do *Domain) LoadPrivilegeLoop(ctx sessionctx.Context) error {
 	}
 
 	var watchCh clientv3.WatchChan
-	duration := 5 * time.Minute
+	duration := 5000 * time.Minute
 	if do.etcdClient != nil {
 		watchCh = do.etcdClient.Watch(context.Background(), privilegeKey)
-		duration = 10 * time.Minute
+		duration = 10000 * time.Minute
 	}
 
 	go func() {

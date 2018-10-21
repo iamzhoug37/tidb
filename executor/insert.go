@@ -63,7 +63,7 @@ func (e *InsertExec) exec(rows [][]types.Datum) error {
 		}
 	} else {
 		for _, row := range rows {
-			if _, err := e.addRecord(row); err != nil {
+			if _, err := e.addRecord(row); err != nil { //看博客意思缩减到这一行上面了
 				return errors.Trace(err)
 			}
 		}
@@ -128,13 +128,13 @@ func (e *InsertExec) batchUpdateDupRows(newRows [][]types.Datum) error {
 	return nil
 }
 
-// Next implements Exec Next interface.
+// Next implements Exec Next interface.  执行入口
 func (e *InsertExec) Next(ctx context.Context, chk *chunk.Chunk) error {
 	chk.Reset()
 	if e.finished {
 		return nil
 	}
-	cols, err := e.getColumns(e.Table.Cols())
+	cols, err := e.getColumns(e.Table.Cols()) //对待插入数据的每行进行表达式求值
 	if err != nil {
 		return errors.Trace(err)
 	}

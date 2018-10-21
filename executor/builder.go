@@ -119,7 +119,7 @@ func (b *executorBuilder) build(p plannercore.Plan) Executor {
 		return b.buildShowDDLJobQueries(v)
 	case *plannercore.ShowSlow:
 		return b.buildShowSlow(v)
-	case *plannercore.Show:
+	case *plannercore.Show:		//show的plan
 		return b.buildShow(v)
 	case *plannercore.Simple:
 		return b.buildSimple(v)
@@ -523,7 +523,7 @@ func (b *executorBuilder) buildSet(v *plannercore.Set) Executor {
 	return e
 }
 
-func (b *executorBuilder) buildInsert(v *plannercore.Insert) Executor {
+func (b *executorBuilder) buildInsert(v *plannercore.Insert) Executor {//把plan转为InsertExec
 	selectExec := b.build(v.SelectPlan)
 	if b.err != nil {
 		b.err = errors.Trace(b.err)

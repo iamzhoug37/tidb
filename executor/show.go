@@ -45,7 +45,7 @@ import (
 type ShowExec struct {
 	baseExecutor
 
-	Tp     ast.ShowStmtType // Databases/Tables/Columns/....
+	Tp     ast.ShowStmtType // Databases/Tables/Columns/....  show的类型
 	DBName model.CIStr
 	Table  *ast.TableName  // Used for showing columns.
 	Column *ast.ColumnName // Used for `desc table column`.
@@ -66,7 +66,7 @@ type ShowExec struct {
 func (e *ShowExec) Next(ctx context.Context, chk *chunk.Chunk) error {
 	chk.GrowAndReset(e.maxChunkSize)
 	if e.result == nil {
-		e.result = e.newFirstChunk()
+		e.result = e.newFirstChunk() //创建了一个chunk
 		err := e.fetchAll()
 		if err != nil {
 			return errors.Trace(err)
@@ -252,7 +252,7 @@ func (e *ShowExec) fetchShowTableStatus() error {
 	for _, t := range tables {
 		now := types.CurrentTime(mysql.TypeDatetime)
 		e.appendRow([]interface{}{t.Meta().Name.O, "InnoDB", 10, "Compact", 100, 100, 100, 100, 100, 100, 100,
-			model.TSConvert2Time(t.Meta().UpdateTS).String(), now, now, "utf8_general_ci", "", createOptions(t.Meta()), t.Meta().Comment})
+			model.TSConvert2Time(t.Meta().UpdateTS).String(), now, now, "utf8_general_ci", "", createOptions(t.Meta()), t.Meta().Comment}) //这个时候的数据已经存在了
 	}
 	return nil
 }

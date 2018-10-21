@@ -82,7 +82,7 @@ func (st *TxnState) changeInvalidToPending(future *txnFuture) {
 	st.txnFuture = future
 }
 
-func (st *TxnState) changePendingToValid(txnCap int) error {
+func (st *TxnState) changePendingToValid(txnCap int) error {//把trancsation的状态从pending状态改为可用状态
 	if st.txnFuture == nil {
 		return errors.New("transaction future is not set")
 	}

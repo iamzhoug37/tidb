@@ -35,17 +35,17 @@ type Compiler struct {
 
 // Compile compiles an ast.StmtNode to a physical plan.
 func (c *Compiler) Compile(ctx context.Context, stmtNode ast.StmtNode) (*ExecStmt, error) {
-	if span := opentracing.SpanFromContext(ctx); span != nil {
+	if span := opentracing.SpanFromContext(ctx); span != nil { //分布式追踪的，类似于mtrace
 		span1 := opentracing.StartSpan("executor.Compile", opentracing.ChildOf(span.Context()))
 		defer span1.Finish()
 	}
 
 	infoSchema := GetInfoSchema(c.Ctx)
-	if err := plannercore.Preprocess(c.Ctx, stmtNode, infoSchema, false); err != nil {
+	if err := plannercore.Preprocess(c.Ctx, stmtNode, infoSchema, false); err != nil { //做合法性检查以及名字绑定
 		return nil, errors.Trace(err)
 	}
 
-	finalPlan, err := plannercore.Optimize(c.Ctx, stmtNode, infoSchema)
+	finalPlan, err := plannercore.Optimize(c.Ctx, stmtNode, infoSchema) //制定查询计划，并优化
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
@@ -53,7 +53,7 @@ func (c *Compiler) Compile(ctx context.Context, stmtNode ast.StmtNode) (*ExecStm
 	CountStmtNode(stmtNode, c.Ctx.GetSessionVars().InRestrictedSQL)
 	isExpensive := logExpensiveQuery(stmtNode, finalPlan)
 
-	return &ExecStmt{
+	return &ExecStmt{		//返回了一个execStmt
 		InfoSchema: infoSchema,
 		Plan:       finalPlan,
 		Expensive:  isExpensive,
@@ -197,7 +197,7 @@ func GetInfoSchema(ctx sessionctx.Context) infoschema.InfoSchema {
 		is = snap.(infoschema.InfoSchema)
 		log.Infof("con:%d use snapshot schema %d", sessVar.ConnectionID, is.SchemaMetaVersion())
 	} else {
-		is = sessVar.TxnCtx.InfoSchema.(infoschema.InfoSchema)
+		is = sessVar.TxnCtx.InfoSchema.(infoschema.InfoSchema)  //infoSchema其实有点类似于一套接口的抽象，这个地方捞的其实就是这些方法
 	}
 	return is
 }

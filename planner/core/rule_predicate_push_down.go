@@ -45,7 +45,7 @@ func addSelection(p LogicalPlan, child LogicalPlan, conditions []expression.Expr
 	p.Children()[chIdx] = selection
 }
 
-// PredicatePushDown implements LogicalPlan interface.
+// PredicatePushDown implements LogicalPlan interface.   谓词下推
 func (p *baseLogicalPlan) PredicatePushDown(predicates []expression.Expression) ([]expression.Expression, LogicalPlan) {
 	if len(p.children) == 0 {
 		return predicates, p.self

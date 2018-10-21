@@ -721,14 +721,14 @@ func (s *session) SetProcessInfo(sql string) {
 
 func (s *session) executeStatement(ctx context.Context, connID uint64, stmtNode ast.StmtNode, stmt ast.Statement, recordSets []ast.RecordSet) ([]ast.RecordSet, error) {
 	s.SetValue(sessionctx.QueryString, stmt.OriginText())
-	if _, ok := stmtNode.(ast.DDLNode); ok {
+	if _, ok := stmtNode.(ast.DDLNode); ok { //根据是否为DDL node，进行不同的操作
 		s.SetValue(sessionctx.LastExecuteDDL, true)
 	} else {
 		s.ClearValue(sessionctx.LastExecuteDDL)
 	}
 	logStmt(stmtNode, s.sessionVars)
 	startTime := time.Now()
-	recordSet, err := runStmt(ctx, s, stmt)
+	recordSet, err := runStmt(ctx, s, stmt) //真正的执行
 	if err != nil {
 		if !kv.ErrKeyExists.Equal(err) {
 			log.Warnf("con:%d schema_ver:%d session error:\n%v\n%s",
@@ -748,7 +748,7 @@ func (s *session) executeStatement(ctx context.Context, connID uint64, stmtNode 
 	return recordSets, nil
 }
 
-func (s *session) Execute(ctx context.Context, sql string) (recordSets []ast.RecordSet, err error) {
+func (s *session) Execute(ctx context.Context, sql string) (recordSets []ast.RecordSet, err error) { //最重要的函数，会调用其他模块，完成语句执行
 	if recordSets, err = s.execute(ctx, sql); err != nil {
 		err = errors.Trace(err)
 		s.sessionVars.StmtCtx.AppendError(err)
@@ -766,9 +766,10 @@ func (s *session) execute(ctx context.Context, sql string) (recordSets []ast.Rec
 
 	charsetInfo, collation := s.sessionVars.GetCharsetInfo()
 
-	// Step1: Compile query string to abstract syntax trees(ASTs).
+	// Step1: Compile query string to abstract syntax trees(ASTs).  step1：翻译sql
 	startTS := time.Now()
-	stmtNodes, err := s.ParseSQL(ctx, sql, charsetInfo, collation)
+	stmtNodes, err := s.ParseSQL(ctx, sql, charsetInfo, collation)//先翻译sql语句，把文本解析成结构化数据，也就是抽象语法树
+	fmt.Println("sql:" , sql , "stmtNodes:" ,stmtNodes)
 	if err != nil {
 		s.rollbackOnError(ctx)
 		log.Warnf("con:%d parse error:\n%v\n%s", connID, err, sql)
@@ -784,13 +785,14 @@ func (s *session) execute(ctx context.Context, sql string) (recordSets []ast.Rec
 	for _, stmtNode := range stmtNodes {
 		s.PrepareTxnCtx(ctx)
 
-		// Step2: Transform abstract syntax tree to a physical plan(stored in executor.ExecStmt).
+		// Step2: Transform abstract syntax tree to a physical plan(stored in executor.ExecStmt).  生成物理计划，存储在ExecStmt
 		startTS = time.Now()
 		// Some executions are done in compile stage, so we reset them before compile.
 		if err := executor.ResetStmtCtx(s, stmtNode); err != nil {
 			return nil, errors.Trace(err)
 		}
-		stmt, err := compiler.Compile(ctx, stmtNode)
+		stmt, err := compiler.Compile(ctx, stmtNode) //拿到 AST 之后，就可以做各种验证、变化、优化，这一系列动作的入口在这里
+		fmt.Println("sql:" , sql , "stmt:" , stmt)
 		if err != nil {
 			s.rollbackOnError(ctx)
 			log.Warnf("con:%d compile error:\n%v\n%s", connID, err, sql)
@@ -798,10 +800,12 @@ func (s *session) execute(ctx context.Context, sql string) (recordSets []ast.Rec
 		}
 		metrics.SessionExecuteCompileDuration.WithLabelValues(label).Observe(time.Since(startTS).Seconds())
 
-		// Step3: Execute the physical plan.
+		// Step3: Execute the physical plan. 执行物理计划，将结果写到recordSet里面
 		if recordSets, err = s.executeStatement(ctx, connID, stmtNode, stmt, recordSets); err != nil {
 			return nil, errors.Trace(err)
 		}
+
+		fmt.Println("sql:" , sql , "recordSets" , recordSets)
 	}
 
 	if s.sessionVars.ClientCapability&mysql.ClientMultiResults == 0 && len(recordSets) > 1 {
@@ -1111,7 +1115,7 @@ func BootstrapSession(store kv.Storage) (*domain.Domain, error) {
 		return nil, errors.Trace(err)
 	}
 
-	se1, err := createSession(store)
+/*	se1, err := createSession(store)
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
@@ -1126,7 +1130,7 @@ func BootstrapSession(store kv.Storage) (*domain.Domain, error) {
 			return nil, errors.Trace(err)
 		}
 	}
-
+*/
 	return dom, errors.Trace(err)
 }
 
@@ -1159,7 +1163,7 @@ func runInBootstrapSession(store kv.Storage, bootstrap func(Session)) {
 	domap.Delete(store)
 }
 
-func createSession(store kv.Storage) (*session, error) {
+func createSession(store kv.Storage) (*session, error) {//创建session
 	dom, err := domap.Get(store)
 	if err != nil {
 		return nil, errors.Trace(err)
@@ -1355,7 +1359,7 @@ func (s *session) ActivePendingTxn() error {
 	if s.txn.Valid() {
 		return nil
 	}
-	txnCap := s.getMembufCap()
+	txnCap := s.getMembufCap() //transcation capacity，默认为4096
 	// The transaction status should be pending.
 	if err := s.txn.changePendingToValid(txnCap); err != nil {
 		return errors.Trace(err)
@@ -1399,7 +1403,7 @@ func (s *session) ShowProcess() util.ProcessInfo {
 	return pi
 }
 
-// logStmt logs some crucial SQL including: CREATE USER/GRANT PRIVILEGE/CHANGE PASSWORD/DDL etc and normal SQL
+// logStmt logs some crucial SQL including: CREATE USER/GRANT PRIVILEGE/CHANGE PASSWORD/DDL etc and normal SQL  记录一些关键的stmt
 // if variable.ProcessGeneralLog is set.
 func logStmt(node ast.StmtNode, vars *variable.SessionVars) {
 	switch stmt := node.(type) {
@@ -1411,6 +1415,12 @@ func logStmt(node ast.StmtNode, vars *variable.SessionVars) {
 		if ss, ok := node.(ast.SensitiveStmtNode); ok {
 			log.Infof("[CRUCIAL OPERATION] con:%d schema_ver:%d %s (by %s).", vars.ConnectionID, schemaVersion, ss.SecureText(), user)
 		} else {
+			fmt.Println("con" , vars.ConnectionID)
+			fmt.Println("schemaVersion" , schemaVersion)
+			fmt.Println("stmt.Text()" , stmt.Text())
+			fmt.Println("user" , user)
+			fmt.Printf("[CRUCIAL OPERATION] con:%d schema_ver:%d %s (by %s).", 110, 119, "xx", "yyy")
+			fmt.Printf("[CRUCIAL OPERATION] con:%d schema_ver:%d %s (by %s).", vars.ConnectionID, schemaVersion, stmt.Text(), user)
 			log.Infof("[CRUCIAL OPERATION] con:%d schema_ver:%d %s (by %s).", vars.ConnectionID, schemaVersion, stmt.Text(), user)
 		}
 	default:

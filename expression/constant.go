@@ -48,7 +48,7 @@ var (
 	}
 )
 
-// Constant stands for a constant value.
+// Constant stands for a constant value.  常量值
 type Constant struct {
 	Value        types.Datum
 	RetType      *types.FieldType
@@ -114,7 +114,7 @@ func (c *Constant) Eval(_ chunk.Row) (types.Datum, error) {
 	return c.Value, nil
 }
 
-// EvalInt returns int representation of Constant.
+// EvalInt returns int representation of Constant.  返回这个常量代表的int型值
 func (c *Constant) EvalInt(ctx sessionctx.Context, _ chunk.Row) (int64, bool, error) {
 	if c.DeferredExpr != nil {
 		dt, err := c.DeferredExpr.Eval(chunk.Row{})

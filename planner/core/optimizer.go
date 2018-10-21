@@ -71,7 +71,7 @@ func Optimize(ctx sessionctx.Context, node ast.Node, is infoschema.InfoSchema) (
 		is:        is,
 		colMapper: make(map[*ast.ColumnNameExpr]int),
 	}
-	p, err := builder.build(node)
+	p, err := builder.build(node) //构建plan
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
@@ -84,7 +84,7 @@ func Optimize(ctx sessionctx.Context, node ast.Node, is infoschema.InfoSchema) (
 		}
 	}
 
-	if logic, ok := p.(LogicalPlan); ok {
+	if logic, ok := p.(LogicalPlan); ok { //如果是一个logical plan，那么执行优化
 		return doOptimize(builder.optFlag, logic)
 	}
 	if execPlan, ok := p.(*Execute); ok {
@@ -152,7 +152,7 @@ func logicalOptimize(flag uint64, logic LogicalPlan) (LogicalPlan, error) {
 	return logic, errors.Trace(err)
 }
 
-func physicalOptimize(logic LogicalPlan) (PhysicalPlan, error) {
+func physicalOptimize(logic LogicalPlan) (PhysicalPlan, error) {//把逻辑计划转为物理计划
 	if _, err := logic.deriveStats(); err != nil {
 		return nil, errors.Trace(err)
 	}
@@ -164,7 +164,7 @@ func physicalOptimize(logic LogicalPlan) (PhysicalPlan, error) {
 		ExpectedCnt: math.MaxFloat64,
 	}
 
-	t, err := logic.findBestTask(prop)
+	t, err := logic.findBestTask(prop) //把逻辑计划转为物理计划
 	if err != nil {
 		return nil, errors.Trace(err)
 	}

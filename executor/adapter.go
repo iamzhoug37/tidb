@@ -126,7 +126,7 @@ func (a *recordSet) Close() error {
 
 // ExecStmt implements the ast.Statement interface, it builds a planner.Plan to an ast.Statement.
 type ExecStmt struct {
-	// InfoSchema stores a reference to the schema information.
+	// InfoSchema stores a reference to the schema information.  存储一个指向schema的引用
 	InfoSchema infoschema.InfoSchema
 	// Plan stores a reference to the final physical plan.
 	Plan plannercore.Plan
@@ -216,7 +216,7 @@ func (a *ExecStmt) Exec(ctx context.Context) (ast.RecordSet, error) {
 	}
 
 	var pi processinfoSetter
-	if raw, ok := sctx.(processinfoSetter); ok {
+	if raw, ok := sctx.(processinfoSetter); ok { //session实现了这个接口
 		pi = raw
 		sql := a.OriginText()
 		if simple, ok := a.Plan.(*plannercore.Simple); ok && simple.Statement != nil {
@@ -238,7 +238,7 @@ func (a *ExecStmt) Exec(ctx context.Context) (ast.RecordSet, error) {
 		return a.handleNoDelayExecutor(ctx, sctx, e, pi)
 	}
 
-	return &recordSet{
+	return &recordSet{ //构建recordSet
 		executor:    e,
 		stmt:        a,
 		processinfo: pi,
@@ -278,7 +278,7 @@ func (a *ExecStmt) handleNoDelayExecutor(ctx context.Context, sctx sessionctx.Co
 	return nil, nil
 }
 
-// buildExecutor build a executor from plan, prepared statement may need additional procedure.
+// buildExecutor build a executor from plan, prepared statement may need additional procedure.  根据plan创建了executor，准备statement也许额外需要的程序
 func (a *ExecStmt) buildExecutor(ctx sessionctx.Context) (Executor, error) {
 	if _, ok := a.Plan.(*plannercore.Execute); !ok {
 		// Do not sync transaction for Execute statement, because the real optimization work is done in

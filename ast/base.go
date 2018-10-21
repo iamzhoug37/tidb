@@ -58,8 +58,8 @@ type dmlNode struct {
 // dmlStatement implements DMLNode interface.
 func (dn *dmlNode) dmlStatement() {}
 
-// exprNode is the struct implements Expression interface.
-// Expression implementations should embed it in.
+// exprNode is the struct implements Expression interface. exprNode是一个实现了expression接口的结构
+// Expression implementations should embed it in.   Expression的实现应该把他嵌进去
 type exprNode struct {
 	node
 	types.Datum

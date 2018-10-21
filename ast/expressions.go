@@ -662,12 +662,12 @@ func (n *IsTruthExpr) Accept(v Visitor) (Node, bool) {
 	return v.Leave(n)
 }
 
-// PatternLikeExpr is the expression for like operator, e.g, expr like "%123%"
+// PatternLikeExpr is the expression for like operator, e.g, expr like "%123%"   模式匹配的算子
 type PatternLikeExpr struct {
 	exprNode
 	// Expr is the expression to be checked.
 	Expr ExprNode
-	// Pattern is the like expression.
+	// Pattern is the like expression.  模式是一个like的表达式
 	Pattern ExprNode
 	// Not is true, the expression is "not like".
 	Not bool
@@ -708,7 +708,7 @@ func (n *PatternLikeExpr) Accept(v Visitor) (Node, bool) {
 		n.Expr = node.(ExprNode)
 	}
 	if n.Pattern != nil {
-		node, ok := n.Pattern.Accept(v)
+		node, ok := n.Pattern.Accept(v) //pattern不为空，就尝试用pattern来accept这个visitor
 		if !ok {
 			return n, false
 		}

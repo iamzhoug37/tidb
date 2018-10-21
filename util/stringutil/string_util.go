@@ -125,13 +125,13 @@ func Unquote(s string) (t string, err error) {
 }
 
 const (
-	patMatch = iota + 1
-	patOne
-	patAny
+	patMatch = iota + 1		//完全匹配
+	patOne					//匹配一次
+	patAny					//匹配0次多次
 )
 
 // CompilePattern handles escapes and wild cards convert pattern characters and
-// pattern types.
+// pattern types.   CompilePattern负责处理转移字符和通配符的转换模式字符以及模式类型
 func CompilePattern(pattern string, escape byte) (patChars, patTypes []byte) {
 	var lastAny bool
 	patChars = make([]byte, len(pattern))
@@ -178,8 +178,8 @@ func CompilePattern(pattern string, escape byte) (patChars, patTypes []byte) {
 			lastAny = false
 			tp = patMatch
 		}
-		patChars[patLen] = c
-		patTypes[patLen] = tp
+		patChars[patLen] = c		//字符
+		patTypes[patLen] = tp		//匹配用的是什么
 		patLen++
 	}
 	patChars = patChars[:patLen]

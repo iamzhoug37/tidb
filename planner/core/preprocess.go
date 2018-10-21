@@ -29,7 +29,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Preprocess resolves table names of the node, and checks some statements validation.
+// Preprocess resolves table names of the node, and checks some statements validation. preprocess(pre+process 处理之前的处理) 解析node的表名字，然后检查一些statement是否合法
 func Preprocess(ctx sessionctx.Context, node ast.Node, is infoschema.InfoSchema, inPrepare bool) error {
 	v := preprocessor{is: is, ctx: ctx, inPrepare: inPrepare, tableAliasInJoin: make([]map[string]interface{}, 0, 0)}
 	node.Accept(&v)
@@ -54,7 +54,7 @@ type preprocessor struct {
 }
 
 func (p *preprocessor) Enter(in ast.Node) (out ast.Node, skipChildren bool) {
-	switch node := in.(type) {
+	switch node := in.(type) {  //根据输入的类型来选择不同的语句执行
 	case *ast.CreateTableStmt:
 		p.inCreateOrDropTable = true
 		p.checkCreateTableGrammar(node)
@@ -73,7 +73,7 @@ func (p *preprocessor) Enter(in ast.Node) (out ast.Node, skipChildren bool) {
 		p.checkCreateDatabaseGrammar(node)
 	case *ast.DropDatabaseStmt:
 		p.checkDropDatabaseGrammar(node)
-	case *ast.ShowStmt:
+	case *ast.ShowStmt: //show xxx 这些语句 SHOW TABLE STATUS like 't1'
 		p.resolveShowStmt(node)
 	case *ast.UnionSelectList:
 		p.checkUnionSelectList(node)
@@ -82,7 +82,7 @@ func (p *preprocessor) Enter(in ast.Node) (out ast.Node, skipChildren bool) {
 	case *ast.Join:
 		p.checkNonUniqTableAlias(node)
 	default:
-		p.parentIsJoin = false
+		p.parentIsJoin = false	//parentIsJoin为
 	}
 	return in, p.err != nil
 }
@@ -592,7 +592,7 @@ func (p *preprocessor) handleTableName(tn *ast.TableName) {
 }
 
 func (p *preprocessor) resolveShowStmt(node *ast.ShowStmt) {
-	if node.DBName == "" {
+	if node.DBName == "" { //给数据库加名字的
 		if node.Table != nil && node.Table.Schema.L != "" {
 			node.DBName = node.Table.Schema.O
 		} else {
@@ -601,7 +601,7 @@ func (p *preprocessor) resolveShowStmt(node *ast.ShowStmt) {
 	} else if node.Table != nil && node.Table.Schema.L == "" {
 		node.Table.Schema = model.NewCIStr(node.DBName)
 	}
-	if node.User != nil && node.User.CurrentUser {
+	if node.User != nil && node.User.CurrentUser { //对这个用户不知道做了什么
 		// Fill the Username and Hostname with the current user.
 		currentUser := p.ctx.GetSessionVars().User
 		if currentUser != nil {

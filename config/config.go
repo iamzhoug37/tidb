@@ -248,7 +248,7 @@ type Binlog struct {
 	IgnoreError bool `toml:"ignore-error" json:"ignore-error"`
 }
 
-var defaultConf = Config{
+var defaultConf = Config{ //如果什么都不指定的话，就用的是这个默认配置
 	Host:             "0.0.0.0",
 	AdvertiseAddress: "",
 	Port:             4000,
@@ -324,7 +324,7 @@ var defaultConf = Config{
 	},
 }
 
-var globalConf = defaultConf
+var globalConf = defaultConf //全局配置等于默认配置
 
 // NewConfig creates a new config instance with default value.
 func NewConfig() *Config {

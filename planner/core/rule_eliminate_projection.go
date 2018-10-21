@@ -18,7 +18,7 @@ import (
 )
 
 // canProjectionBeEliminatedLoose checks whether a projection can be eliminated,
-// returns true if every expression is a single column.
+// returns true if every expression is a single column.  投影消除
 func canProjectionBeEliminatedLoose(p *LogicalProjection) bool {
 	for _, expr := range p.Exprs {
 		_, ok := expr.(*expression.Column)

@@ -89,7 +89,7 @@ const (
 const ErrTextLength = 80
 
 // Command information.
-const (
+const (//mysql的命令汇总
 	ComSleep byte = iota
 	ComQuit
 	ComInitDB

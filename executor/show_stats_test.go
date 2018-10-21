@@ -98,3 +98,11 @@ func (s *testSuite) TestShowStatsHasNullValue(c *C) {
 	tk.MustExec("analyze table t")
 	tk.MustQuery("show stats_buckets").Check(testkit.Rows("test t idx 1 0 1 1 NULL NULL"))
 }
+
+func (s *testSuite) TestShowStatsWithCaseSensitivity(c *C) {
+	tk := testkit.NewTestKit(c, s.store)
+	tk.MustExec("use test")
+	tk.MustExec("drop table if exists t")
+	tk.MustExec("create table t (a int)")
+	tk.MustQuery("SHOW TABLE STATUS like 't1'").Check(testkit.Rows("test t 100"))
+}
