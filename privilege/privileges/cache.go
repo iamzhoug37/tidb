@@ -48,7 +48,7 @@ func computePrivMask(privs []mysql.PrivilegeType) mysql.PrivilegeType {
 	return mask
 }
 
-// UserRecord is used to represent a user record in privilege cache.
+// UserRecord is used to represent a user record in privilege cache.    UserRecord代表了一个用户在权限管理cache中的一条记录
 type UserRecord struct {
 	Host       string // max length 60, primary key
 	User       string // max length 16, primary key
@@ -463,7 +463,7 @@ func (p *MySQLPrivilege) connectionVerification(user, host string) *UserRecord {
 func (p *MySQLPrivilege) matchUser(user, host string) *UserRecord {
 	for i := 0; i < len(p.User); i++ {
 		record := &p.User[i]
-		if record.match(user, host) {
+		if record.match(user, host) {//p.user里面存着所有的用户，把与user+host匹配的用户返回
 			return record
 		}
 	}
@@ -502,17 +502,17 @@ func (p *MySQLPrivilege) matchColumns(user, host, db, table, column string) *col
 
 // RequestVerification checks whether the user have sufficient privileges to do the operation.
 func (p *MySQLPrivilege) RequestVerification(user, host, db, table, column string, priv mysql.PrivilegeType) bool {
-	record1 := p.matchUser(user, host)
-	if record1 != nil && record1.Privileges&priv > 0 {
+	record1 := p.matchUser(user, host)	//拿用户的权限
+	if record1 != nil && record1.Privileges&priv > 0 {		//root用户的这一大堆权限在哪里初始化的呢？
 		return true
 	}
 
-	record2 := p.matchDB(user, host, db)
+	record2 := p.matchDB(user, host, db)	//拿这个用户在这个DB的权限
 	if record2 != nil && record2.Privileges&priv > 0 {
 		return true
 	}
 
-	record3 := p.matchTables(user, host, db, table)
+	record3 := p.matchTables(user, host, db, table)	//拿这个用户在这个table的权限
 	if record3 != nil {
 		if record3.TablePriv&priv > 0 {
 			return true
@@ -522,7 +522,7 @@ func (p *MySQLPrivilege) RequestVerification(user, host, db, table, column strin
 		}
 	}
 
-	record4 := p.matchColumns(user, host, db, table, column)
+	record4 := p.matchColumns(user, host, db, table, column)	//拿这个用户在这个列上面的权限
 	if record4 != nil && record4.ColumnPriv&priv > 0 {
 		return true
 	}
@@ -690,7 +690,7 @@ func NewHandle() *Handle {
 
 // Get the MySQLPrivilege for read.
 func (h *Handle) Get() *MySQLPrivilege {
-	return h.priv.Load().(*MySQLPrivilege)
+	return h.priv.Load().(*MySQLPrivilege) //把priv中的存储的值取出来了
 }
 
 // Update loads all the privilege info from kv storage.

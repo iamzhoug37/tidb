@@ -236,7 +236,7 @@ func (do *Domain) tryLoadSchemaDiffs(m *meta.Meta, usedVersion, newVersion int64
 	return true, tblIDs, nil
 }
 
-// InfoSchema gets information schema from domain.
+// InfoSchema gets information schema from domain.  infoSchema是用来从domain中获取信息的schema
 func (do *Domain) InfoSchema() infoschema.InfoSchema {
 	return do.infoHandle.Get()
 }
@@ -253,7 +253,7 @@ func (do *Domain) GetSnapshotInfoSchema(snapshotTS uint64) (infoschema.InfoSchem
 
 // DDL gets DDL from domain.
 func (do *Domain) DDL() ddl.DDL {
-	return do.ddl
+	return do.ddl		//这里说明ddl是属于domain的一部分
 }
 
 // InfoSyncer gets infoSyncer from domain.

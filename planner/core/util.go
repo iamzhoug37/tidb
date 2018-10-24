@@ -85,7 +85,7 @@ func (s *physicalSchemaProducer) SetSchema(schema *expression.Schema) {
 	s.schema = schema
 }
 
-// baseSchemaProducer stores the schema for the base plans who can produce schema directly.
+// baseSchemaProducer stores the schema for the base plans who can produce schema directly.			baseSchemaProducer存储着可以直接生产schema的base plan
 type baseSchemaProducer struct {
 	schema *expression.Schema
 	basePlan

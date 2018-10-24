@@ -60,8 +60,8 @@ var (
 	ErrTooManyKeyParts = terror.ClassSchema.New(codeTooManyKeyParts, "Too many key parts specified; max %d parts allowed")
 )
 
-// InfoSchema is the interface used to retrieve the schema information.  InfoSchema是一个用来接收schema信息的接口
-// It works as a in memory cache and doesn't handle any schema change.
+// InfoSchema is the interface used to retrieve the schema information.  InfoSchema是一个用来取schema(库)信息的接口
+// It works as a in memory cache and doesn't handle any schema change.		他本身不处理任何schema变更，只是一个读取，返回的值也是一个copy
 // InfoSchema is read-only, and the returned value is a copy.
 // TODO: add more methods to retrieve tables and columns.
 type InfoSchema interface {
@@ -108,7 +108,7 @@ func (s sortedTables) searchTable(id int64) int {
 	return idx
 }
 
-type schemaTables struct {
+type schemaTables struct { //看起来像是table的集合的schema信息
 	dbInfo *model.DBInfo
 	tables map[string]table.Table
 }
@@ -243,7 +243,7 @@ func (is *infoSchema) Clone() (result []*model.DBInfo) {
 	return
 }
 
-// Handle handles information schema, including getting and setting.
+// Handle handles information schema, including getting and setting.   handle负责处理schema，包括getting和setting
 type Handle struct {
 	value atomic.Value
 	store kv.Storage

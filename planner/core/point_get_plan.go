@@ -115,12 +115,12 @@ func (p *PointGetPlan) SetChildren(...PhysicalPlan) {}
 func (p *PointGetPlan) ResolveIndices() {}
 
 func tryFastPlan(ctx sessionctx.Context, node ast.Node) Plan {
-	if PreparedPlanCacheEnabled() {
+	if PreparedPlanCacheEnabled() {	//提前准备了cache就返回nil
 		// Do not support plan cache.
 		return nil
 	}
 	switch x := node.(type) {
-	case *ast.SelectStmt:
+	case *ast.SelectStmt:		//select的优化
 		fp := tryPointGetPlan(ctx, x)
 		if fp != nil {
 			if checkFastPlanPrivilege(ctx, fp, mysql.SelectPriv) != nil {
@@ -128,9 +128,9 @@ func tryFastPlan(ctx sessionctx.Context, node ast.Node) Plan {
 			}
 			return fp
 		}
-	case *ast.UpdateStmt:
+	case *ast.UpdateStmt:		//update的优化
 		return tryUpdatePointPlan(ctx, x)
-	case *ast.DeleteStmt:
+	case *ast.DeleteStmt:		//删除的优化
 		return tryDeletePointPlan(ctx, x)
 	}
 	return nil

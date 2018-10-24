@@ -813,10 +813,10 @@ func (n *GrantStmt) Accept(v Visitor) (Node, bool) {
 	return v.Leave(n)
 }
 
-// Ident is the table identifier composed of schema name and table name.
+// Ident is the table identifier composed of schema name and table name.  一张表的身份证  库名字+表名字
 type Ident struct {
-	Schema model.CIStr
-	Name   model.CIStr
+	Schema model.CIStr	//为啥给库取名字都取成了schema？
+	Name   model.CIStr	//表名字
 }
 
 // String implements fmt.Stringer interface.

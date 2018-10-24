@@ -56,7 +56,7 @@ func BindPrivilegeManager(ctx sessionctx.Context, pc Manager) {
 
 // GetPrivilegeManager gets Checker from context.
 func GetPrivilegeManager(ctx sessionctx.Context) Manager {
-	if v, ok := ctx.Value(key).(Manager); ok {
+	if v, ok := ctx.Value(key).(Manager); ok { //有一个map里面存着manager
 		return v
 	}
 	return nil

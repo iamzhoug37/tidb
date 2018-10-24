@@ -55,7 +55,7 @@ func GetStack() []byte {
 	return buf
 }
 
-// WithRecovery wraps goroutine startup call with force recovery.
+// WithRecovery wraps goroutine startup call with force recovery.		运行exec，然后exec退出的时候，运行recover函数，来恢复
 // it will dump current goroutine stack into log if catch any recover result.
 //   exec:      execute logic function.
 //   recoverFn: handler will be called after recover and before dump stack, passing `nil` means noop.

@@ -25,9 +25,9 @@ import (
 )
 
 var (
-	// preparedPlanCacheEnabledValue stores the global config "prepared-plan-cache-enabled".
-	// If the value of "prepared-plan-cache-enabled" is true, preparedPlanCacheEnabledValue's value is 1.
-	// Otherwise, preparedPlanCacheEnabledValue's value is 0.
+	// preparedPlanCacheEnabledValue stores the global config "prepared-plan-cache-enabled".	这是一个全局配置prepared-plan-cache-enabled
+	// If the value of "prepared-plan-cache-enabled" is true, preparedPlanCacheEnabledValue's value is 1.    如果这个值为true，那么他的value为1
+	// Otherwise, preparedPlanCacheEnabledValue's value is 0.		否则这个值就是0
 	preparedPlanCacheEnabledValue int32
 	// PreparedPlanCacheCapacity stores the global config "prepared-plan-cache-capacity".
 	PreparedPlanCacheCapacity uint

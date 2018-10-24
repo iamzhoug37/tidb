@@ -32,12 +32,12 @@ const (
 
 // FieldType records field type information.  变量类型信息
 type FieldType struct {
-	Tp      byte
-	Flag    uint
-	Flen    int
-	Decimal int
-	Charset string
-	Collate string
+	Tp      byte		//mysql的类型信息 type.go里面
+	Flag    uint		//field flag 表示有哪些具体属性，比如primary key not null等等
+	Flen    int			//field len
+	Decimal int			//精度
+	Charset string		//字符集
+	Collate string		//校验?
 	// Elems is the element list for enum and set type.
 	Elems []string
 }

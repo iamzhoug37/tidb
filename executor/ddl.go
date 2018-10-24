@@ -74,7 +74,7 @@ func (e *DDLExec) Next(ctx context.Context, chk *chunk.Chunk) (err error) {
 		err = e.executeTruncateTable(x)
 	case *ast.CreateDatabaseStmt:
 		err = e.executeCreateDatabase(x)
-	case *ast.CreateTableStmt:
+	case *ast.CreateTableStmt:		//执行创建表
 		err = e.executeCreateTable(x)
 	case *ast.CreateIndexStmt:
 		err = e.executeCreateIndex(x)

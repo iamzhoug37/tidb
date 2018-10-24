@@ -42,7 +42,7 @@ var (
 type workerType byte
 
 const (
-	// generalWorker is the worker who handles all DDL statements except “add index”.
+	// generalWorker is the worker who handles all DDL statements except “add index”. 处理所有的ddl statement，除了add index以外
 	generalWorker workerType = 0
 	// addIdxWorker is the worker who handles the operation of adding indexes.
 	addIdxWorker workerType = 1
@@ -52,7 +52,7 @@ const (
 	noneDependencyJob = 0
 )
 
-// worker is used for handling DDL jobs.
+// worker is used for handling DDL jobs.  worker是用来干活的，就是一大堆协程
 // Now we have two kinds of workers.
 type worker struct {
 	id       int32
@@ -117,12 +117,12 @@ func (w *worker) start(d *ddlCtx) {
 	log.Infof("[ddl-%s] start DDL worker", w)
 	defer w.wg.Done()
 
-	w.delRangeManager.start()
+	w.delRangeManager.start() //先启动了一个rangeManager
 
-	// We use 4 * lease time to check owner's timeout, so here, we will update owner's status
-	// every 2 * lease time. If lease is 0, we will use default 1s.
-	// But we use etcd to speed up, normally it takes less than 1s now, so we use 1s as the max value.
-	checkTime := chooseLeaseTime(2*d.lease, 1*time.Second)
+	// We use 4 * lease time to check owner's timeout, so here, we will update owner's status   	 4*lease的时间来检查owner超时
+	// every 2 * lease time. If lease is 0, we will use default 1s.									每2*lease的时间更新一下owner的状态；如果lease是0，那么使用默认值1s
+	// But we use etcd to speed up, normally it takes less than 1s now, so we use 1s as the max value.		但是我们使用etcd来加速，通常而言，这个时间小于1s，所以我们用1s作为max值
+	checkTime := chooseLeaseTime(2*d.lease, 1*time.Second)	//初始化租约时间
 
 	ticker := time.NewTicker(checkTime)
 	defer ticker.Stop()
@@ -131,12 +131,12 @@ func (w *worker) start(d *ddlCtx) {
 		select {
 		case <-ticker.C:
 			log.Debugf("[ddl-%s] wait %s to check DDL status again", w, checkTime)
-		case <-w.ddlJobCh:
+		case <-w.ddlJobCh:	//普通ddlJob触发
 		case <-w.quitCh:
 			return
 		}
 
-		err := w.handleDDLJobQueue(d)
+		err := w.handleDDLJobQueue(d)//开始干活了
 		if err != nil {
 			log.Errorf("[ddl-%s] handle DDL job err %v", w, errors.ErrorStack(err))
 		}
@@ -222,9 +222,9 @@ func (d *ddl) getHistoryDDLJob(id int64) (*model.Job, error) {
 	return job, errors.Trace(err)
 }
 
-// getFirstDDLJob gets the first DDL job form DDL queue.
+// getFirstDDLJob gets the first DDL job form DDL queue.  从DDL队列里面获取第一个DDL job
 func (w *worker) getFirstDDLJob(t *meta.Meta) (*model.Job, error) {
-	job, err := t.GetDDLJobByIdx(0)
+	job, err := t.GetDDLJobByIdx(0)//获取index为0的ddl job
 	return job, errors.Trace(err)
 }
 
@@ -268,8 +268,8 @@ func (w *worker) deleteRange(job *model.Job) error {
 	return errors.Trace(err)
 }
 
-// finishDDLJob deletes the finished DDL job in the ddl queue and puts it to history queue.
-// If the DDL job need to handle in background, it will prepare a background job.
+// finishDDLJob deletes the finished DDL job in the ddl queue and puts it to history queue.  删除已经finished的job，并添加到历史队列里面
+// If the DDL job need to handle in background, it will prepare a background job.		如果这个job需要在后台运行，会准备一个后台job
 func (w *worker) finishDDLJob(t *meta.Meta, job *model.Job) (err error) {
 	startTime := time.Now()
 	defer func() {
@@ -290,23 +290,23 @@ func (w *worker) finishDDLJob(t *meta.Meta, job *model.Job) (err error) {
 		return errors.Trace(err)
 	}
 
-	_, err = t.DeQueueDDLJob()
+	_, err = t.DeQueueDDLJob()	//删除了这个ddl的job
 	if err != nil {
 		return errors.Trace(err)
 	}
 
 	job.BinlogInfo.FinishedTS = t.StartTS
 	log.Infof("[ddl-%s] finish DDL job %v", w, job)
-	err = t.AddHistoryDDLJob(job)
+	err = t.AddHistoryDDLJob(job)	//添加历史job
 	return errors.Trace(err)
 }
 
-func isDependencyJobDone(t *meta.Meta, job *model.Job) (bool, error) {
+func isDependencyJobDone(t *meta.Meta, job *model.Job) (bool, error) {//检查依赖的job是不是完成了
 	if job.DependencyID == noneDependencyJob {
 		return true, nil
 	}
 
-	historyJob, err := t.GetHistoryDDLJob(job.DependencyID)
+	historyJob, err := t.GetHistoryDDLJob(job.DependencyID)//获取所有的历史job
 	if err != nil {
 		return false, errors.Trace(err)
 	}
@@ -325,7 +325,7 @@ func newMetaWithQueueTp(txn kv.Transaction, tp string) *meta.Meta {
 	return meta.NewMeta(txn)
 }
 
-// handleDDLJobQueue handles DDL jobs in DDL Job queue.
+// handleDDLJobQueue handles DDL jobs in DDL Job queue.  尝试处理 DDL job 队列里的 job
 func (w *worker) handleDDLJobQueue(d *ddlCtx) error {
 	once := true
 	waitDependencyJobCnt := 0
@@ -349,7 +349,7 @@ func (w *worker) handleDDLJobQueue(d *ddlCtx) error {
 			var err error
 			t := newMetaWithQueueTp(txn, w.typeStr())
 			// We become the owner. Get the first job and run it.
-			job, err = w.getFirstDDLJob(t)
+			job, err = w.getFirstDDLJob(t)	//是owner，那么获取了一个job出来运行
 			if job == nil || err != nil {
 				return errors.Trace(err)
 			}
@@ -358,12 +358,12 @@ func (w *worker) handleDDLJobQueue(d *ddlCtx) error {
 			}
 
 			if once {
-				w.waitSchemaSynced(d, job, waitTime)
+				w.waitSchemaSynced(d, job, waitTime)//如果第一次运行，那么还需要等待schema sync
 				once = false
 				return nil
 			}
 
-			if job.IsDone() || job.IsRollbackDone() {
+			if job.IsDone() || job.IsRollbackDone() {//如果已经done了，或者rollback了
 				binloginfo.SetDDLBinlog(d.binlogCli, txn, job.ID, job.Query)
 				if !job.IsRollbackDone() {
 					job.State = model.JobStateSynced
@@ -378,7 +378,7 @@ func (w *worker) handleDDLJobQueue(d *ddlCtx) error {
 
 			// If running job meets error, we will save this error in job Error
 			// and retry later if the job is not cancelled.
-			schemaVer, runJobErr = w.runDDLJob(d, t, job)
+			schemaVer, runJobErr = w.runDDLJob(d, t, job)	//运行ddl任务
 			if job.IsCancelled() {
 				err = w.finishDDLJob(t, job)
 				return errors.Trace(err)
@@ -438,7 +438,7 @@ func chooseLeaseTime(t, max time.Duration) time.Duration {
 	return t
 }
 
-// runDDLJob runs a DDL job. It returns the current schema version in this transaction and the error.
+// runDDLJob runs a DDL job. It returns the current schema version in this transaction and the error.  执行这个job
 func (w *worker) runDDLJob(d *ddlCtx, t *meta.Meta, job *model.Job) (ver int64, err error) {
 	log.Infof("[ddl-%s] run DDL job %s", w, job)
 	timeStart := time.Now()
@@ -472,7 +472,7 @@ func (w *worker) runDDLJob(d *ddlCtx, t *meta.Meta, job *model.Job) (ver int64, 
 	case model.ActionDropSchema:
 		ver, err = onDropSchema(t, job)
 	case model.ActionCreateTable:
-		ver, err = onCreateTable(d, t, job)
+		ver, err = onCreateTable(d, t, job)  //创建表
 	case model.ActionDropTable:
 		ver, err = onDropTable(t, job)
 	case model.ActionDropTablePartition:
@@ -592,11 +592,11 @@ func (w *worker) waitSchemaChanged(ctx context.Context, d *ddlCtx, waitTime time
 }
 
 // waitSchemaSynced handles the following situation:
-// If the job enters a new state, and the worker crashs when it's in the process of waiting for 2 * lease time,
-// Then the worker restarts quickly, we may run the job immediately again,
-// but in this case we don't wait enough 2 * lease time to let other servers update the schema.
-// So here we get the latest schema version to make sure all servers' schema version update to the latest schema version
-// in a cluster, or to wait for 2 * lease time.
+// If the job enters a new state, and the worker crashs when it's in the process of waiting for 2 * lease time,				如果一个job进入了一个新状态，然后worker崩溃了，当还没超时的时候
+// Then the worker restarts quickly, we may run the job immediately again,													worker快速重启了，我们也许可以立即再次运行这个job
+// but in this case we don't wait enough 2 * lease time to let other servers update the schema.								但是这种case我们没有等待足够的2*lease来让其他server更新schema
+// So here we get the latest schema version to make sure all servers' schema version update to the latest schema version	因此这里我们获取最新的schema version，从而让一个集群的其他server的schema version也更新到最新的
+// in a cluster, or to wait for 2 * lease time.																				或者等待2个lease时间
 func (w *worker) waitSchemaSynced(d *ddlCtx, job *model.Job, waitTime time.Duration) {
 	if !job.IsRunning() && !job.IsRollingback() && !job.IsDone() && !job.IsRollbackDone() {
 		return

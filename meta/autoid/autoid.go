@@ -33,7 +33,7 @@ var step = int64(30000)
 
 var errInvalidTableID = terror.ClassAutoid.New(codeInvalidTableID, "invalid TableID")
 
-// Allocator is an auto increment id generator.
+// Allocator is an auto increment id generator.  自增id的生成器
 // Just keep id unique actually.
 type Allocator interface {
 	// Alloc allocs the next autoID for table with tableID.

@@ -112,8 +112,8 @@ type TableName struct {
 	node
 	resultSetNode
 
-	Schema model.CIStr
-	Name   model.CIStr
+	Schema model.CIStr //数据库名字(看着传进来的是这个)
+	Name   model.CIStr //table名称
 
 	DBInfo    *model.DBInfo
 	TableInfo *model.TableInfo

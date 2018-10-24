@@ -80,11 +80,11 @@ var (
 	ErrTableNotExists = terror.ClassMeta.New(codeTableNotExists, "table doesn't exist")
 )
 
-// Meta is for handling meta information in a transaction.
+// Meta is for handling meta information in a transaction.   meta是用来在一个transcation里面处理meta信息
 type Meta struct {
 	txn        *structure.TxStructure
 	StartTS    uint64 // StartTS is the txn's start TS.
-	jobListKey JobListKeyType
+	jobListKey JobListKeyType //里面就有个key
 }
 
 // NewMeta creates a Meta in transaction txn.
@@ -499,7 +499,7 @@ func (m *Meta) DeQueueDDLJob() (*model.Job, error) {
 }
 
 func (m *Meta) getDDLJob(key []byte, index int64) (*model.Job, error) {
-	value, err := m.txn.LIndex(key, index)
+	value, err := m.txn.LIndex(key, index) //把二进制捞出来了
 	if err != nil || value == nil {
 		return nil, errors.Trace(err)
 	}
@@ -509,7 +509,7 @@ func (m *Meta) getDDLJob(key []byte, index int64) (*model.Job, error) {
 		// set the default priority to kv.PriorityLow.
 		Priority: kv.PriorityLow,
 	}
-	err = job.Decode(value)
+	err = job.Decode(value)	//解析到job里面
 	// Check if the job.Priority is valid.
 	if job.Priority < kv.PriorityNormal || job.Priority > kv.PriorityHigh {
 		job.Priority = kv.PriorityLow

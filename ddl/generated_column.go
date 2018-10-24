@@ -19,10 +19,10 @@ import (
 	"github.com/pkg/errors"
 )
 
-// columnGenerationInDDL is a struct for validating generated columns in DDL.
+// columnGenerationInDDL is a struct for validating generated columns in DDL.   用来验证ddl里面列生成， generated为true表示为虚拟列，为false表示不是虚拟列；position表第几列
 type columnGenerationInDDL struct {
 	position    int
-	generated   bool
+	generated   bool			//generated column  是个虚拟列，MySQL5.7的新特性
 	dependences map[string]struct{}
 }
 
@@ -66,7 +66,7 @@ func findDependedColumnNames(colDef *ast.ColumnDef) (generated bool, colsMap map
 	for _, option := range colDef.Options {
 		if option.Tp == ast.ColumnOptionGenerated {
 			generated = true
-			colNames := findColumnNamesInExpr(option.Expr)
+			colNames := findColumnNamesInExpr(option.Expr) //根据option的expr找到colName
 			for _, depCol := range colNames {
 				colsMap[depCol.Name.L] = struct{}{}
 			}

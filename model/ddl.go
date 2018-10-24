@@ -24,10 +24,10 @@ import (
 	"github.com/pkg/errors"
 )
 
-// ActionType is the type for DDL action.
+// ActionType is the type for DDL action.  就是一个byte类型
 type ActionType byte
 
-// List DDL actions.
+// List DDL actions.   DDL   ddl行为
 const (
 	ActionNone               ActionType = 0
 	ActionCreateSchema       ActionType = 1
@@ -52,7 +52,7 @@ const (
 	ActionDropTablePartition ActionType = 20
 )
 
-// AddIndexStr is a string related to the operation of "add index".
+// AddIndexStr is a string related to the operation of "add index".  添加索引
 const AddIndexStr = "add index"
 
 var actionMap = map[ActionType]string{
@@ -86,7 +86,7 @@ func (action ActionType) String() string {
 	return "none"
 }
 
-// HistoryInfo is used for binlog.
+// HistoryInfo is used for binlog.  HistoryInfo是给binLog使用
 type HistoryInfo struct {
 	SchemaVersion int64
 	DBInfo        *DBInfo
@@ -340,7 +340,7 @@ const (
 	JobStateRollbackDone JobState = 3
 	JobStateDone         JobState = 4
 	JobStateCancelled    JobState = 5
-	// JobStateSynced is used to mark the information about the completion of this job
+	// JobStateSynced is used to mark the information about the completion of this job  任务已经完成了
 	// has been synchronized to all servers.
 	JobStateSynced JobState = 6
 	// JobStateCancelling is used to mark the DDL job is cancelled by the client, but the DDL work hasn't handle it.

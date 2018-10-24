@@ -65,7 +65,7 @@ func HasCursorExistsFlag(serverStatus uint16) bool {
 const (
 	// MaxPayloadLen is the max packet payload length.
 	MaxPayloadLen = 1<<24 - 1
-	// MaxTableNameLength is max length of table name identifier.
+	// MaxTableNameLength is max length of table name identifier.   mysql一张表表名最长为64长度
 	MaxTableNameLength = 64
 	// MaxDatabaseNameLength is max length of database name identifier.
 	MaxDatabaseNameLength = 64
@@ -615,7 +615,7 @@ var locale2FormatFunction = map[string]FormatFunc{
 	"zh_CN": formatZHCN,
 }
 
-// PriorityEnum is defined for Priority const values.
+// PriorityEnum is defined for Priority const values.  优先级
 type PriorityEnum int
 
 // Priority const values.

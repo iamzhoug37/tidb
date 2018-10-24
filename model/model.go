@@ -26,11 +26,11 @@ import (
 	"github.com/pkg/errors"
 )
 
-// SchemaState is the state for schema elements.
+// SchemaState is the state for schema elements.		schema元素的状态
 type SchemaState byte
 
 const (
-	// StateNone means this schema element is absent and can't be used.
+	// StateNone means this schema element is absent and can't be used.  有元素缺失，还不能使用
 	StateNone SchemaState = iota
 	// StateDeleteOnly means we can only delete items for this schema element.
 	StateDeleteOnly
@@ -41,7 +41,7 @@ const (
 	StateWriteReorganization
 	// StateDeleteReorganization means we are re-organizing whole data after delete only state.
 	StateDeleteReorganization
-	// StatePublic means this schema element is ok for all write and read operations.
+	// StatePublic means this schema element is ok for all write and read operations.  读写都可以的
 	StatePublic
 )
 
@@ -65,7 +65,7 @@ func (s SchemaState) String() string {
 
 // ColumnInfo provides meta data describing of a table column.  描述一个表列的元数据信息
 type ColumnInfo struct {
-	ID                  int64               `json:"id"` 	//第几列
+	ID                  int64               `json:"id"` 	//在表里面的第几行上
 	Name                CIStr               `json:"name"`	//列名(case不敏感)
 	Offset              int                 `json:"offset"`	//偏移量
 	OriginDefaultValue  interface{}         `json:"origin_default"`
@@ -138,7 +138,7 @@ const ExtraHandleID = -1
 // ExtraHandleName is the name of ExtraHandle Column.
 var ExtraHandleName = NewCIStr("_tidb_rowid")
 
-// TableInfo provides meta data describing a DB table. 用来描述一个DB的元数据信息
+// TableInfo provides meta data describing a DB table. 用来描述一个table的元数据信息
 type TableInfo struct {
 	ID      int64  `json:"id"`
 	Name    CIStr  `json:"name"`
@@ -423,14 +423,14 @@ func (fk *FKInfo) Clone() *FKInfo {
 	return &nfk
 }
 
-// DBInfo provides meta data describing a DB.
+// DBInfo provides meta data describing a DB.  DB的metadata
 type DBInfo struct {
-	ID      int64        `json:"id"`      // Database ID
+	ID      int64        `json:"id"`      // Database ID   `json:"id"`属于struct tag
 	Name    CIStr        `json:"db_name"` // DB name.
 	Charset string       `json:"charset"`
-	Collate string       `json:"collate"`
-	Tables  []*TableInfo `json:"-"` // Tables in the DB.
-	State   SchemaState  `json:"state"`
+	Collate string       `json:"collate"`	//不知道是什么意思？
+	Tables  []*TableInfo `json:"-"` // Tables in the DB.   DB中的表
+	State   SchemaState  `json:"state"`		//当前DB的状态
 }
 
 // Clone clones DBInfo.

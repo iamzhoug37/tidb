@@ -397,8 +397,8 @@ func (n *CompareSubqueryExpr) Accept(v Visitor) (Node, bool) {
 // ColumnName represents column name.
 type ColumnName struct {
 	node
-	Schema model.CIStr
-	Table  model.CIStr
+	Schema model.CIStr	//按道理来说，要么这一项等于""，要么等于库名字
+	Table  model.CIStr	//同上，要么为""，要么为表名字  理解就是类似于应用一样的东西
 	Name   model.CIStr
 }
 

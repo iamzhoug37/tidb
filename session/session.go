@@ -720,7 +720,7 @@ func (s *session) SetProcessInfo(sql string) {
 }
 
 func (s *session) executeStatement(ctx context.Context, connID uint64, stmtNode ast.StmtNode, stmt ast.Statement, recordSets []ast.RecordSet) ([]ast.RecordSet, error) {
-	s.SetValue(sessionctx.QueryString, stmt.OriginText())
+	s.SetValue(sessionctx.QueryString, stmt.OriginText())		//把原始的客户端发上来的sql语句写进去
 	if _, ok := stmtNode.(ast.DDLNode); ok { //根据是否为DDL node，进行不同的操作
 		s.SetValue(sessionctx.LastExecuteDDL, true)
 	} else {
@@ -728,7 +728,7 @@ func (s *session) executeStatement(ctx context.Context, connID uint64, stmtNode 
 	}
 	logStmt(stmtNode, s.sessionVars)
 	startTime := time.Now()
-	recordSet, err := runStmt(ctx, s, stmt) //真正的执行
+	recordSet, err := runStmt(ctx, s, stmt) //执行stmt，生成recordSet
 	if err != nil {
 		if !kv.ErrKeyExists.Equal(err) {
 			log.Warnf("con:%d schema_ver:%d session error:\n%v\n%s",
@@ -1364,7 +1364,7 @@ func (s *session) ActivePendingTxn() error {
 	if err := s.txn.changePendingToValid(txnCap); err != nil {
 		return errors.Trace(err)
 	}
-	s.sessionVars.TxnCtx.StartTS = s.txn.StartTS()
+	s.sessionVars.TxnCtx.StartTS = s.txn.StartTS() //transcation开始的时间戳
 	return nil
 }
 

@@ -13,7 +13,7 @@
 
 package mysql
 
-// MySQL type information.
+// MySQL type information.   mysql的type列表
 const (
 	TypeDecimal   byte = 0
 	TypeTiny      byte = 1

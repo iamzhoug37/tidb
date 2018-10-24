@@ -32,11 +32,11 @@ import (
 	"github.com/pkg/errors"
 )
 
-type visitInfo struct {
-	privilege mysql.PrivilegeType
-	db        string
-	table     string
-	column    string
+type visitInfo struct {//存储着访问控制权限(目前看到的是提供给manager去检查是否有对应权限)
+	privilege mysql.PrivilegeType	//权限类型
+	db        string				//db名称
+	table     string				//表名称
+	column    string				//列名称
 }
 
 type tableHintInfo struct {
@@ -113,7 +113,7 @@ type planBuilder struct {
 	inUpdateStmt bool
 	// colMapper stores the column that must be pre-resolved.
 	colMapper map[*ast.ColumnNameExpr]int
-	// Collect the visit information for privilege check.
+	// Collect the visit information for privilege check.  访问权限检查
 	visitInfo     []visitInfo
 	tableHintInfo []tableHintInfo
 	optFlag       uint64
@@ -171,7 +171,7 @@ func (b *planBuilder) build(node ast.Node) (Plan, error) {
 		*ast.BeginStmt, *ast.CommitStmt, *ast.RollbackStmt, *ast.CreateUserStmt, *ast.SetPwdStmt,
 		*ast.GrantStmt, *ast.DropUserStmt, *ast.AlterUserStmt, *ast.RevokeStmt, *ast.KillStmt, *ast.DropStatsStmt:
 		return b.buildSimple(node.(ast.StmtNode)), nil
-	case ast.DDLNode:
+	case ast.DDLNode: //create等操作
 		return b.buildDDL(x), nil
 	}
 	return nil, ErrUnsupportedType.GenWithStack("Unsupported type %T", node)
@@ -1346,14 +1346,14 @@ func (b *planBuilder) buildDDL(node ast.DDLNode) Plan {
 			table:     v.Table.Name.L,
 		})
 	case *ast.CreateTableStmt:
-		b.visitInfo = append(b.visitInfo, visitInfo{
+		b.visitInfo = append(b.visitInfo, visitInfo{ //加了一个create权限  当前的db+table
 			privilege: mysql.CreatePriv,
 			db:        v.Table.Schema.L,
 			table:     v.Table.Name.L,
 		})
 		if v.ReferTable != nil {
 			b.visitInfo = append(b.visitInfo, visitInfo{
-				privilege: mysql.SelectPriv,
+				privilege: mysql.SelectPriv,		//有referTable的话，加一个select权限，然后这个权限是到db+table的
 				db:        v.ReferTable.Schema.L,
 				table:     v.ReferTable.Name.L,
 			})

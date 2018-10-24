@@ -50,7 +50,7 @@ func (t *TxStructure) GetInt64(key []byte) (int64, error) {
 	return n, errors.Trace(err)
 }
 
-// Inc increments the integer value of a key by step, returns
+// Inc increments the integer value of a key by step, returns  自增
 // the value after the increment.
 func (t *TxStructure) Inc(key []byte, step int64) (int64, error) {
 	if t.readWriter == nil {

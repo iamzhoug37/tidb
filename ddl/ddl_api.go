@@ -173,7 +173,7 @@ func buildColumnsAndConstraints(ctx sessionctx.Context, colDefs []*ast.ColumnDef
 	constraints []*ast.Constraint) ([]*table.Column, []*ast.Constraint, error) {
 	var cols []*table.Column
 	colMap := map[string]*table.Column{}
-	// outPriKeyConstraint is the primary key constraint out of column definition. such as: create table t1 (id int , age int, primary key(id));
+	// outPriKeyConstraint is the primary key constraint out of column definition. such as: create table t1 (id int , age int, primary key(id));   主键不是在列定义的时候定义的，而是额外赋予的
 	var outPriKeyConstraint *ast.Constraint
 	for _, v := range constraints {
 		if v.Tp == ast.ConstraintPrimaryKey {
@@ -182,16 +182,16 @@ func buildColumnsAndConstraints(ctx sessionctx.Context, colDefs []*ast.ColumnDef
 		}
 	}
 	for i, colDef := range colDefs {
-		col, cts, err := buildColumnAndConstraint(ctx, i, colDef, outPriKeyConstraint)
+		col, cts, err := buildColumnAndConstraint(ctx, i, colDef, outPriKeyConstraint)	//构建这个column，以及这个列有的constraint
 		if err != nil {
 			return nil, nil, errors.Trace(err)
 		}
-		col.State = model.StatePublic
+		col.State = model.StatePublic		//设置为public状态
 		constraints = append(constraints, cts...)
 		cols = append(cols, col)
 		colMap[colDef.Name.Name.L] = col
 	}
-	// Traverse table Constraints and set col.flag.
+	// Traverse table Constraints and set col.flag.   把约束设置给col.flag
 	for _, v := range constraints {
 		setColumnFlagWithConstraint(colMap, v)
 	}
@@ -202,27 +202,27 @@ func setCharsetCollationFlenDecimal(tp *types.FieldType) error {
 	tp.Charset = strings.ToLower(tp.Charset)
 	tp.Collate = strings.ToLower(tp.Collate)
 	if len(tp.Charset) == 0 {
-		switch tp.Tp {
+		switch tp.Tp {//这些是string类型
 		case mysql.TypeString, mysql.TypeVarchar, mysql.TypeVarString, mysql.TypeBlob, mysql.TypeTinyBlob, mysql.TypeMediumBlob, mysql.TypeLongBlob, mysql.TypeEnum, mysql.TypeSet:
 			tp.Charset, tp.Collate = getDefaultCharsetAndCollate()
 		default:
-			tp.Charset = charset.CharsetBin
+			tp.Charset = charset.CharsetBin //这些是二进制文件类型
 			tp.Collate = charset.CharsetBin
 		}
 	} else {
-		if !charset.ValidCharsetAndCollation(tp.Charset, tp.Collate) {
+		if !charset.ValidCharsetAndCollation(tp.Charset, tp.Collate) {//先验证字符集，验证不通过，直接报错了
 			return errUnsupportedCharset.GenWithStackByArgs(tp.Charset, tp.Collate)
 		}
 		if len(tp.Collate) == 0 {
 			var err error
-			tp.Collate, err = charset.GetDefaultCollation(tp.Charset)
+			tp.Collate, err = charset.GetDefaultCollation(tp.Charset)	//如果collate不存在，那么就根据charset找collate
 			if err != nil {
 				return errors.Trace(err)
 			}
 		}
 	}
 	// Use default value for flen or decimal when they are unspecified.
-	defaultFlen, defaultDecimal := mysql.GetDefaultFieldLengthAndDecimal(tp.Tp)
+	defaultFlen, defaultDecimal := mysql.GetDefaultFieldLengthAndDecimal(tp.Tp)//处理精度和宽度信息
 	if tp.Flen == types.UnspecifiedLength {
 		tp.Flen = defaultFlen
 		if mysql.HasUnsignedFlag(tp.Flag) && tp.Tp != mysql.TypeLonglong && mysql.IsIntegerType(tp.Tp) {
@@ -240,7 +240,7 @@ func setCharsetCollationFlenDecimal(tp *types.FieldType) error {
 // outPriKeyConstraint is the primary key constraint out of column definition. such as: create table t1 (id int , age int, primary key(id));
 func buildColumnAndConstraint(ctx sessionctx.Context, offset int,
 	colDef *ast.ColumnDef, outPriKeyConstraint *ast.Constraint) (*table.Column, []*ast.Constraint, error) {
-	err := setCharsetCollationFlenDecimal(colDef.Tp)
+	err := setCharsetCollationFlenDecimal(colDef.Tp)	//设置字符、collation以及flen、精度
 	if err != nil {
 		return nil, nil, errors.Trace(err)
 	}
@@ -287,7 +287,7 @@ func isExplicitTimeStamp() bool {
 	return true
 }
 
-// columnDefToCol converts ColumnDef to Col and TableConstraints.
+// columnDefToCol converts ColumnDef to Col and TableConstraints.  把ColumnDef转化为Column以及Constraints
 // outPriKeyConstraint is the primary key constraint out of column definition. such as: create table t1 (id int , age int, primary key(id));
 func columnDefToCol(ctx sessionctx.Context, offset int, colDef *ast.ColumnDef, outPriKeyConstraint *ast.Constraint) (*table.Column, []*ast.Constraint, error) {
 	var constraints = make([]*ast.Constraint, 0)
@@ -319,7 +319,7 @@ func columnDefToCol(ctx sessionctx.Context, offset int, colDef *ast.ColumnDef, o
 			},
 		}
 
-		for _, v := range colDef.Options {
+		for _, v := range colDef.Options {//实现对应的option
 			switch v.Tp {
 			case ast.ColumnOptionNotNull:
 				col.Flag |= mysql.NotNullFlag
@@ -551,14 +551,14 @@ func checkPriKeyConstraint(col *table.Column, hasDefaultValue, hasNullFlag bool,
 	return nil
 }
 
-func checkDuplicateColumn(colDefs []*ast.ColumnDef) error {
+func checkDuplicateColumn(colDefs []*ast.ColumnDef) error {//检查重复列
 	colNames := map[string]bool{}
 	for _, colDef := range colDefs {
 		nameLower := colDef.Name.Name.L
 		if colNames[nameLower] {
 			return infoschema.ErrColumnExists.GenWithStackByArgs(colDef.Name.Name)
 		}
-		colNames[nameLower] = true
+		colNames[nameLower] = true	//设置这个小写的name为true
 	}
 	return nil
 }
@@ -582,7 +582,7 @@ func checkGeneratedColumn(colDefs []*ast.ColumnDef) error {
 	}
 	for _, colDef := range colDefs {
 		colName := colDef.Name.Name.L
-		if err := verifyColumnGeneration(colName2Generation, colName); err != nil {
+		if err := verifyColumnGeneration(colName2Generation, colName); err != nil { //验证虚拟列是不是有问题，具体怎么验证还没有看
 			return errors.Trace(err)
 		}
 	}
@@ -615,7 +615,7 @@ func checkColumnsAttributes(colDefs []*ast.ColumnDef) error {
 	return nil
 }
 
-// checkColumnAttributes check attributes for single column.
+// checkColumnAttributes check attributes for single column.	检查这个列的属相是否合规  里面目前只检查了double、float、datatime、duration、timestamp等等
 func checkColumnAttributes(colName string, tp *types.FieldType) error {
 	switch tp.Tp {
 	case mysql.TypeNewDecimal, mysql.TypeDouble, mysql.TypeFloat:
@@ -675,7 +675,7 @@ func checkConstraintNames(constraints []*ast.Constraint) error {
 	// Check not empty constraint name whether is duplicated.
 	for _, constr := range constraints {
 		if constr.Tp == ast.ConstraintForeignKey {
-			err := checkDuplicateConstraint(fkNames, constr.Name, true)
+			err := checkDuplicateConstraint(fkNames, constr.Name, true) //检查重复约束
 			if err != nil {
 				return errors.Trace(err)
 			}
@@ -690,7 +690,7 @@ func checkConstraintNames(constraints []*ast.Constraint) error {
 	// Set empty constraint names.
 	for _, constr := range constraints {
 		if constr.Tp == ast.ConstraintForeignKey {
-			setEmptyConstraintName(fkNames, constr, true)
+			setEmptyConstraintName(fkNames, constr, true)	//空约束
 		} else {
 			setEmptyConstraintName(constrNames, constr, false)
 		}
@@ -706,16 +706,16 @@ func buildTableInfo(ctx sessionctx.Context, d *ddl, tableName model.CIStr, cols 
 	// When this function is called by MockTableInfo, we should set a particular table id.
 	// So the `ddl` structure may be nil.
 	if d != nil {
-		tbInfo.ID, err = d.genGlobalID()
+		tbInfo.ID, err = d.genGlobalID()	//获取了全局的tableID
 		if err != nil {
 			return nil, errors.Trace(err)
 		}
 	}
 	for _, v := range cols {
-		v.ID = allocateColumnID(tbInfo)
-		tbInfo.Columns = append(tbInfo.Columns, v.ToInfo())
+		v.ID = allocateColumnID(tbInfo)	//分配了一个行id
+		tbInfo.Columns = append(tbInfo.Columns, v.ToInfo())//添加行到info里面
 	}
-	for _, constr := range constraints {
+	for _, constr := range constraints {		//处理约束
 		if constr.Tp == ast.ConstraintForeignKey {
 			for _, fk := range tbInfo.ForeignKeys {
 				if fk.Name.L == strings.ToLower(constr.Name) {
@@ -848,8 +848,8 @@ func (d *ddl) CreateTableWithLike(ctx sessionctx.Context, ident, referIdent ast.
 	return errors.Trace(err)
 }
 
-func (d *ddl) CreateTable(ctx sessionctx.Context, s *ast.CreateTableStmt) (err error) {
-	ident := ast.Ident{Schema: s.Table.Schema, Name: s.Table.Name}
+func (d *ddl) CreateTable(ctx sessionctx.Context, s *ast.CreateTableStmt) (err error) {//创建表开始的地方
+	ident := ast.Ident{Schema: s.Table.Schema, Name: s.Table.Name} 		//加个断点明天看
 	if s.ReferTable != nil {
 		referIdent := ast.Ident{Schema: s.ReferTable.Schema, Name: s.ReferTable.Name}
 		return d.CreateTableWithLike(ctx, ident, referIdent, s.IfNotExists)
@@ -860,49 +860,49 @@ func (d *ddl) CreateTable(ctx sessionctx.Context, s *ast.CreateTableStmt) (err e
 	if !ok {
 		return infoschema.ErrDatabaseNotExists.GenWithStackByArgs(ident.Schema)
 	}
-	if is.TableExists(ident.Schema, ident.Name) {
+	if is.TableExists(ident.Schema, ident.Name) { //如果这个库+表已经存在了，那么就不能再往下走了
 		if s.IfNotExists {
 			ctx.GetSessionVars().StmtCtx.AppendNote(infoschema.ErrTableExists.GenWithStackByArgs(ident))
 			return nil
 		}
 		return infoschema.ErrTableExists.GenWithStackByArgs(ident)
 	}
-	if err = checkTooLongTable(ident.Name); err != nil {
+	if err = checkTooLongTable(ident.Name); err != nil {	//检查表长
 		return errors.Trace(err)
 	}
-	if err = checkDuplicateColumn(colDefs); err != nil {
+	if err = checkDuplicateColumn(colDefs); err != nil {	//检查重复的列
 		return errors.Trace(err)
 	}
-	if err = checkGeneratedColumn(colDefs); err != nil {
+	if err = checkGeneratedColumn(colDefs); err != nil {	//检查虚拟列
 		return errors.Trace(err)
 	}
-	if err = checkTooLongColumn(colDefs); err != nil {
+	if err = checkTooLongColumn(colDefs); err != nil {		//检查列长
 		return errors.Trace(err)
 	}
-	if err = checkTooManyColumns(colDefs); err != nil {
-		return errors.Trace(err)
-	}
-
-	if err = checkColumnsAttributes(colDefs); err != nil {
+	if err = checkTooManyColumns(colDefs); err != nil {		//检查表中列的数量
 		return errors.Trace(err)
 	}
 
-	cols, newConstraints, err := buildColumnsAndConstraints(ctx, colDefs, s.Constraints)
+	if err = checkColumnsAttributes(colDefs); err != nil {	//检查所有的列属性
+		return errors.Trace(err)
+	}
+
+	cols, newConstraints, err := buildColumnsAndConstraints(ctx, colDefs, s.Constraints)//构建列和约束
 	if err != nil {
 		return errors.Trace(err)
 	}
 
-	err = checkConstraintNames(newConstraints)
+	err = checkConstraintNames(newConstraints)	//检查约束的合法性
 	if err != nil {
 		return errors.Trace(err)
 	}
-
+	//获取 global table ID，生成 tableInfo , 即 table 的元信息
 	tbInfo, err := buildTableInfo(ctx, d, ident.Name, cols, newConstraints)
 	if err != nil {
 		return errors.Trace(err)
 	}
 
-	pi, err := buildTablePartitionInfo(ctx, d, s)
+	pi, err := buildTablePartitionInfo(ctx, d, s)	//partition类型怎么设置
 	if err != nil {
 		return errors.Trace(err)
 	}
@@ -938,7 +938,7 @@ func (d *ddl) CreateTable(ctx sessionctx.Context, s *ast.CreateTableStmt) (err e
 		tbInfo.Partition = pi
 	}
 
-	job := &model.Job{
+	job := &model.Job{	//然后封装成一个 DDL job，这个 job 包含了 table ID 和 tableInfo ，并将这个 job 的 type 标记为 ActionCreateTable
 		SchemaID:   schema.ID,
 		TableID:    tbInfo.ID,
 		Type:       model.ActionCreateTable,
@@ -946,7 +946,7 @@ func (d *ddl) CreateTable(ctx sessionctx.Context, s *ast.CreateTableStmt) (err e
 		Args:       []interface{}{tbInfo},
 	}
 
-	err = handleTableOptions(s.Options, tbInfo)
+	err = handleTableOptions(s.Options, tbInfo)//处理table的一些选项设置，比如字符集之类的
 	if err != nil {
 		return errors.Trace(err)
 	}
@@ -954,20 +954,20 @@ func (d *ddl) CreateTable(ctx sessionctx.Context, s *ast.CreateTableStmt) (err e
 	if err != nil {
 		return errors.Trace(err)
 	}
-	err = d.doDDLJob(ctx, job)
+	err = d.doDDLJob(ctx, job)	//这个函数返回了就说明创建成功了
 	if err == nil {
-		if tbInfo.AutoIncID > 1 {
+		if tbInfo.AutoIncID > 1 {	//自增起始的id如果设置为>=2，那说明第一行的数为2，那么就得特殊处理了；mysql auto_increment的值为1
 			// Default tableAutoIncID base is 0.
 			// If the first ID is expected to greater than 1, we need to do rebase.
 			err = d.handleAutoIncID(tbInfo, schema.ID)
 		}
 	}
 
-	// table exists, but if_not_exists flags is true, so we ignore this error.
+	// table exists, but if_not_exists flags is true, so we ignore this error.  表存在，但是设置了IfNotExist的话，就返回nil
 	if infoschema.ErrTableExists.Equal(err) && s.IfNotExists {
 		return nil
 	}
-	err = d.callHookOnChanged(err)
+	err = d.callHookOnChanged(err)//报错之后的钩子
 	return errors.Trace(err)
 }
 
@@ -990,7 +990,7 @@ func (d *ddl) handleAutoIncID(tbInfo *model.TableInfo, schemaID int64) error {
 	// The operation of the minus 1 to make sure that the current value doesn't be used,
 	// the next Alloc operation will get this value.
 	// Its behavior is consistent with MySQL.
-	if err = tb.RebaseAutoID(nil, tbInfo.AutoIncID-1, false); err != nil {
+	if err = tb.RebaseAutoID(nil, tbInfo.AutoIncID-1, false); err != nil {//重置了自增的id
 		return errors.Trace(err)
 	}
 	return nil

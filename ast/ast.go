@@ -34,7 +34,7 @@ type Node interface {
 	// Implementation of this method should first call visitor.Enter,   这个方法的实现应该首先访问visitor的enter方法
 	// assign the returned node to its method receiver, if skipChildren returns true, 分配返回的节点给这个方法的调用者，如果accept返回的skipChildren为true，那么子节点应该被跳过
 	// children should be skipped. Otherwise, call its children in particular order that 否则调用他的孩子按照特定的顺序，依赖的顺序是后面的元素的依赖于前面的元素。
-	// later elements depends on former elements. Finally, return visitor.Leave.   最后返回visitor.Leave
+	// later elements depends on former elements. Finally, return visitor.Leave.   最后调用visitor.Leave，并返回调用结果
 	Accept(v Visitor) (node Node, ok bool)
 	// Text returns the original text of the element.
 	Text() string

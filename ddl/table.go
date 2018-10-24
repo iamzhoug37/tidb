@@ -30,7 +30,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func onCreateTable(d *ddlCtx, t *meta.Meta, job *model.Job) (ver int64, _ error) {
+func onCreateTable(d *ddlCtx, t *meta.Meta, job *model.Job) (ver int64, _ error) { //真正创建table的过程
 	schemaID := job.SchemaID
 	tbInfo := &model.TableInfo{}
 	if err := job.DecodeArgs(tbInfo); err != nil {
@@ -40,13 +40,13 @@ func onCreateTable(d *ddlCtx, t *meta.Meta, job *model.Job) (ver int64, _ error)
 	}
 
 	tbInfo.State = model.StateNone
-	err := checkTableNotExists(t, job, schemaID, tbInfo.Name.L)
+	err := checkTableNotExists(t, job, schemaID, tbInfo.Name.L)	//检查表是不是存在
 	if err != nil {
 		return ver, errors.Trace(err)
 	}
 
 	if tbInfo.Partition != nil {
-		err = checkAddPartitionTooManyPartitions(len(tbInfo.Partition.Definitions))
+		err = checkAddPartitionTooManyPartitions(len(tbInfo.Partition.Definitions))	//检查partition
 		if err != nil {
 			job.State = model.JobStateCancelled
 			return ver, errors.Trace(err)
@@ -63,7 +63,7 @@ func onCreateTable(d *ddlCtx, t *meta.Meta, job *model.Job) (ver int64, _ error)
 		// none -> public
 		tbInfo.State = model.StatePublic
 		tbInfo.UpdateTS = t.StartTS
-		err = t.CreateTable(schemaID, tbInfo)
+		err = t.CreateTable(schemaID, tbInfo)//将db_ID和table_ID映射为key，tableInfo作为value存到TiKV里面去，并更新job的状态
 		if err != nil {
 			return ver, errors.Trace(err)
 		}
@@ -72,8 +72,8 @@ func onCreateTable(d *ddlCtx, t *meta.Meta, job *model.Job) (ver int64, _ error)
 			go splitTableRegion(d.store, tbInfo.ID)
 		}
 		// Finish this job.
-		job.FinishTableJob(model.JobStateDone, model.StatePublic, ver, tbInfo)
-		asyncNotifyEvent(d, &util.Event{Tp: model.ActionCreateTable, TableInfo: tbInfo})
+		job.FinishTableJob(model.JobStateDone, model.StatePublic, ver, tbInfo)//将job从DDL job队列中移除，然后加入history ddl job队列中去
+		asyncNotifyEvent(d, &util.Event{Tp: model.ActionCreateTable, TableInfo: tbInfo})	//异步通知
 		return ver, nil
 	default:
 		return ver, ErrInvalidTableState.GenWithStack("invalid table state %v", tbInfo.State)

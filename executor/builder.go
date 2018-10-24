@@ -83,7 +83,7 @@ func (b *executorBuilder) build(p plannercore.Plan) Executor {
 		return b.buildCheckIndexRange(v)
 	case *plannercore.ChecksumTable:
 		return b.buildChecksumTable(v)
-	case *plannercore.DDL:
+	case *plannercore.DDL:	//create 属于DDL范畴
 		return b.buildDDL(v)
 	case *plannercore.Deallocate:
 		return b.buildDeallocate(v)

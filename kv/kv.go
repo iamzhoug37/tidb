@@ -50,11 +50,11 @@ const (
 	KeyOnly
 )
 
-// Priority value for transaction priority.
+// Priority value for transaction priority.  事务优先级
 const (
-	PriorityNormal = iota
-	PriorityLow
-	PriorityHigh
+	PriorityNormal = iota	//普通优先级
+	PriorityLow				//低优先级
+	PriorityHigh			//高优先级
 )
 
 // IsoLevel is the transaction's isolation level.
@@ -244,10 +244,10 @@ type Driver interface {
 	Open(path string) (Storage, error)
 }
 
-// Storage defines the interface for storage.
+// Storage defines the interface for storage.   定义了一个存储接口
 // Isolation should be at least SI(SNAPSHOT ISOLATION)
 type Storage interface {
-	// Begin transaction
+	// Begin transaction  开始一个事务
 	Begin() (Transaction, error)
 	// BeginWithStartTS begins transaction with startTS.
 	BeginWithStartTS(startTS uint64) (Transaction, error)

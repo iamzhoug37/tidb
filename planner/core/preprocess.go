@@ -43,7 +43,7 @@ type preprocessor struct {
 	ctx       sessionctx.Context
 	err       error
 	inPrepare bool
-	// inCreateOrDropTable is true when visiting create/drop table statement.
+	// inCreateOrDropTable is true when visiting create/drop table statement.  返回create和drop的时候要设置为true
 	inCreateOrDropTable bool
 
 	// tableAliasInJoin is a stack that keeps the table alias names for joins.
@@ -53,7 +53,7 @@ type preprocessor struct {
 	parentIsJoin bool
 }
 
-func (p *preprocessor) Enter(in ast.Node) (out ast.Node, skipChildren bool) {
+func (p *preprocessor) Enter(in ast.Node) (out ast.Node, skipChildren bool) {//对node进行pre process 预处理(主要对这个stmt进行预处理，比如合法性检查，不全字段的补齐啥的)
 	switch node := in.(type) {  //根据输入的类型来选择不同的语句执行
 	case *ast.CreateTableStmt:
 		p.inCreateOrDropTable = true
@@ -89,10 +89,10 @@ func (p *preprocessor) Enter(in ast.Node) (out ast.Node, skipChildren bool) {
 
 func (p *preprocessor) Leave(in ast.Node) (out ast.Node, ok bool) {
 	switch x := in.(type) {
-	case *ast.CreateTableStmt:
+	case *ast.CreateTableStmt:	//创建表的时候会进来
 		p.inCreateOrDropTable = false
-		p.checkAutoIncrement(x)
-		p.checkContainDotColumn(x)
+		p.checkAutoIncrement(x)	//检查自增
+		p.checkContainDotColumn(x)//检查有没有逗号的列
 	case *ast.DropTableStmt, *ast.AlterTableStmt, *ast.RenameTableStmt:
 		p.inCreateOrDropTable = false
 	case *ast.ParamMarkerExpr:
@@ -199,7 +199,7 @@ func (p *preprocessor) checkAutoIncrement(stmt *ast.CreateTableStmt) {
 		}
 	}
 
-	if count < 1 {
+	if count < 1 { //说明没有自增
 		return
 	}
 	if !isKey {
@@ -211,7 +211,7 @@ func (p *preprocessor) checkAutoIncrement(stmt *ast.CreateTableStmt) {
 			autoIncrementMustBeKey = false
 		}
 	}
-	if (autoIncrementMustBeKey && !isKey) || count > 1 {
+	if (autoIncrementMustBeKey && !isKey) || count > 1 {//自增必须配合primary key或者uniq key使用，且只能有一个
 		p.err = errors.New("Incorrect table definition; there can be only one auto column and it must be defined as a key")
 	}
 
@@ -267,7 +267,7 @@ func (p *preprocessor) checkCreateTableGrammar(stmt *ast.CreateTableStmt) {
 			return
 		}
 		countPrimaryKey += isPrimary(colDef.Options)
-		if countPrimaryKey > 1 {
+		if countPrimaryKey > 1 {		//主键的数量如果大于1个，那么就有问题了
 			p.err = infoschema.ErrMultiplePriKey
 			return
 		}
@@ -536,7 +536,7 @@ func isInvalidDefaultValue(colDef *ast.ColumnDef) bool {
 	return false
 }
 
-// isIncorrectName checks if the identifier is incorrect.
+// isIncorrectName checks if the identifier is incorrect.   这个函数是用来检查名字是否正确的，但看样子只检查了名字不为空以及结尾没有空格
 // See https://dev.mysql.com/doc/refman/5.7/en/identifiers.html
 func isIncorrectName(name string) bool {
 	if len(name) == 0 {
@@ -574,11 +574,11 @@ func (p *preprocessor) handleTableName(tn *ast.TableName) {
 			p.err = errors.Trace(ErrNoDB)
 			return
 		}
-		tn.Schema = model.NewCIStr(currentDB)
+		tn.Schema = model.NewCIStr(currentDB)  //把DB的名字赋予了tn.schema
 	}
 	if p.inCreateOrDropTable {
-		// The table may not exist in create table or drop table statement.
-		// Skip resolving the table to avoid error.
+		// The table may not exist in create table or drop table statement.		在创建表或者删除表的时候，这个表也许不存在
+		// Skip resolving the table to avoid error.								跳过表解析来避免错误
 		return
 	}
 	table, err := p.is.TableByName(tn.Schema, tn.Name)

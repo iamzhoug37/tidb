@@ -228,7 +228,7 @@ func (a *ExecStmt) Exec(ctx context.Context) (ast.RecordSet, error) {
 		// Update processinfo, ShowProcess() will use it.
 		pi.SetProcessInfo(sql)
 	}
-	// If the executor doesn't return any result to the client, we execute it without delay.
+	// If the executor doesn't return any result to the client, we execute it without delay.  如果这个executor不需要返回任何结果给客户端，那么可以延迟执行一下
 	if e.Schema().Len() == 0 {
 		return a.handleNoDelayExecutor(ctx, sctx, e, pi)
 	} else if proj, ok := e.(*ProjectionExec); ok && proj.calculateNoDelay {
@@ -247,7 +247,7 @@ func (a *ExecStmt) Exec(ctx context.Context) (ast.RecordSet, error) {
 }
 
 func (a *ExecStmt) handleNoDelayExecutor(ctx context.Context, sctx sessionctx.Context, e Executor, pi processinfoSetter) (ast.RecordSet, error) {
-	// Check if "tidb_snapshot" is set for the write executors.
+	// Check if "tidb_snapshot" is set for the write executors.  如果设置了tidb_snapshot给write executor，那么在history read mode，就不能执行写操作
 	// In history read mode, we can not do write operations.
 	switch e.(type) {
 	case *DeleteExec, *InsertExec, *UpdateExec, *ReplaceExec, *LoadDataExec, *DDLExec:
@@ -280,7 +280,7 @@ func (a *ExecStmt) handleNoDelayExecutor(ctx context.Context, sctx sessionctx.Co
 
 // buildExecutor build a executor from plan, prepared statement may need additional procedure.  根据plan创建了executor，准备statement也许额外需要的程序
 func (a *ExecStmt) buildExecutor(ctx sessionctx.Context) (Executor, error) {
-	if _, ok := a.Plan.(*plannercore.Execute); !ok {
+	if _, ok := a.Plan.(*plannercore.Execute); !ok {//不是execute，执行以下的逻辑
 		// Do not sync transaction for Execute statement, because the real optimization work is done in
 		// "ExecuteExec.Build".
 		var err error
@@ -404,9 +404,9 @@ func (a *ExecStmt) logSlowQuery(txnTS uint64, succ bool) {
 	}
 }
 
-// IsPointGetWithPKOrUniqueKeyByAutoCommit returns true when meets following conditions:
-//  1. ctx is auto commit tagged
-//  2. txn is nil
+// IsPointGetWithPKOrUniqueKeyByAutoCommit returns true when meets following conditions:  返回true的时候，需要满足以下条件
+//  1. ctx is auto commit tagged		ctx 有自动commit标记
+//  2. txn is nil						txn是nil
 //  2. plan is point get by pk or unique key
 func IsPointGetWithPKOrUniqueKeyByAutoCommit(ctx sessionctx.Context, p plannercore.Plan) bool {
 	// check auto commit

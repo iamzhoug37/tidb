@@ -243,7 +243,7 @@ type SessionVars struct {
 	// LastFoundRows is the number of found rows of last query statement
 	LastFoundRows uint64
 
-	// StmtCtx holds variables for current executing statement.
+	// StmtCtx holds variables for current executing statement.  保存了当前执行的statement的变量
 	StmtCtx *stmtctx.StatementContext
 
 	// AllowAggPushDown can be set to false to forbid aggregation push down.
@@ -277,7 +277,7 @@ type SessionVars struct {
 	BatchDelete bool
 
 	// IDAllocator is provided by kvEncoder, if it is provided, we will use it to alloc auto id instead of using
-	// Table.alloc.
+	// Table.alloc.		IDAllocator是由kvEncoder提供的，如果这个分配器被提供了，那么我们就使用这个分配器来分配自增id，而不是用table的分配器
 	IDAllocator autoid.Allocator
 
 	// OptimizerSelectivityLevel defines the level of the selectivity estimation in plan.

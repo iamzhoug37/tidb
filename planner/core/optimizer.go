@@ -57,8 +57,8 @@ type logicalOptRule interface {
 	optimize(LogicalPlan) (LogicalPlan, error)
 }
 
-// Optimize does optimization and creates a Plan.
-// The node must be prepared first.
+// Optimize does optimization and creates a Plan.  Optimize做优化，并创建一个plan
+// The node must be prepared first.   node必须提前准备好了
 func Optimize(ctx sessionctx.Context, node ast.Node, is infoschema.InfoSchema) (Plan, error) {
 	fp := tryFastPlan(ctx, node)
 	if fp != nil {

@@ -45,7 +45,7 @@ func (alloc *Allocator) Reset(newBase int64) {
 	atomic.StoreInt64(&alloc.base, newBase)
 }
 
-// Rebase not allow newBase smaller than alloc.base, and will skip the smaller newBase.
+// Rebase not allow newBase smaller than alloc.base, and will skip the smaller newBase.  重置那个最小的id
 func (alloc *Allocator) Rebase(tableID, newBase int64, allocIDs bool) error {
 	// CAS
 	for {

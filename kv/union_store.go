@@ -19,8 +19,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-// UnionStore is a store that wraps a snapshot for read and a BufferStore for buffered write.
-// Also, it provides some transaction related utilities.
+// UnionStore is a store that wraps a snapshot for read and a BufferStore for buffered write.  unionStore 是一个存储，携带了可以读的snapshot以及一个buffer写的bufferStore
+// Also, it provides some transaction related utilities.		同时他也提供了一些事务相关的公共部分
 type UnionStore interface {
 	MemBuffer
 	// CheckLazyConditionPairs loads all lazy values from store then checks if all values are matched.

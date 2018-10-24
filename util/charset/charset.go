@@ -78,7 +78,7 @@ func GetAllCharsets() []*Desc {
 	return descs
 }
 
-// ValidCharsetAndCollation checks the charset and the collation validity
+// ValidCharsetAndCollation checks the charset and the collation validity  验证字符集是不是支持，目前只支持charsetInfos里面的 charset.go里面的
 // and returns a boolean.
 func ValidCharsetAndCollation(cs string, co string) bool {
 	// We will use utf8 as a default charset.

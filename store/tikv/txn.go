@@ -47,8 +47,8 @@ type tikvTxn struct {
 }
 
 func newTiKVTxn(store *tikvStore) (*tikvTxn, error) {
-	bo := NewBackoffer(context.Background(), tsoMaxBackoff)
-	startTS, err := store.getTimestampWithRetry(bo)
+	bo := NewBackoffer(context.Background(), tsoMaxBackoff)	//background函数基本等于new了一个空的环境出来
+	startTS, err := store.getTimestampWithRetry(bo)	//使用bo(backoffer)获取时间戳来初始化transcation开始的时间
 	if err != nil {
 		return nil, errors.Trace(err)
 	}

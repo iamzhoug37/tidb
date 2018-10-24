@@ -100,7 +100,7 @@ func (n *DropDatabaseStmt) Accept(v Visitor) (Node, bool) {
 	return v.Leave(n)
 }
 
-// IndexColName is used for parsing index column name from SQL.
+// IndexColName is used for parsing index column name from SQL.   从sql中解析出来的index列名使用的
 type IndexColName struct {
 	node
 
@@ -123,7 +123,7 @@ func (n *IndexColName) Accept(v Visitor) (Node, bool) {
 	return v.Leave(n)
 }
 
-// ReferenceDef is used for parsing foreign key reference option from SQL.
+// ReferenceDef is used for parsing foreign key reference option from SQL.   解析出来的外键使用
 // See http://dev.mysql.com/doc/refman/5.7/en/create-table-foreign-keys.html
 type ReferenceDef struct {
 	node
@@ -248,14 +248,14 @@ const (
 type ColumnOption struct {
 	node
 
-	Tp ColumnOptionType
-	// Expr is used for ColumnOptionDefaultValue/ColumnOptionOnUpdateColumnOptionGenerated.
-	// For ColumnOptionDefaultValue or ColumnOptionOnUpdate, it's the target value.
-	// For ColumnOptionGenerated, it's the target expression.
+	Tp ColumnOptionType	//列类型 主键呀、自增啊、not null呀，默认值啥的
+	// Expr is used for ColumnOptionDefaultValue/ColumnOptionOnUpdateColumnOptionGenerated.   Expr是给ColumnOptionDefaultValue/ColumnOptionOnUpdateColumnOptionGenerated使用的
+	// For ColumnOptionDefaultValue or ColumnOptionOnUpdate, it's the target value.			  对于ColumnOptionDefaultValue，这就是target value
+	// For ColumnOptionGenerated, it's the target expression.								  对于ColumnOptionGenerated，这就是target expression
 	Expr ExprNode
-	// Stored is only for ColumnOptionGenerated, default is false.
+	// Stored is only for ColumnOptionGenerated, default is false.							 Stored 只为ColumnOptionGenerated使用，默认为false
 	Stored bool
-	// Refer is used for foreign key.
+	// Refer is used for foreign key.														Refer是给外键使用的
 	Refer *ReferenceDef
 }
 
@@ -276,7 +276,7 @@ func (n *ColumnOption) Accept(v Visitor) (Node, bool) {
 	return v.Leave(n)
 }
 
-// IndexOption is the index options.
+// IndexOption is the index options.   索引项
 //    KEY_BLOCK_SIZE [=] value
 //  | index_type
 //  | WITH PARSER parser_name
@@ -316,18 +316,18 @@ const (
 	ConstraintFulltext
 )
 
-// Constraint is constraint for table definition.
+// Constraint is constraint for table definition.   表定义中的约束
 type Constraint struct {
 	node
 
-	Tp   ConstraintType
-	Name string
+	Tp   ConstraintType		//约束类型
+	Name string				//名称
 
 	Keys []*IndexColName // Used for PRIMARY KEY, UNIQUE, ......
 
 	Refer *ReferenceDef // Used for foreign key.
 
-	Option *IndexOption // Index Options
+	Option *IndexOption // Index Options  索引项
 }
 
 // Accept implements Node Accept interface.
@@ -361,13 +361,13 @@ func (n *Constraint) Accept(v Visitor) (Node, bool) {
 	return v.Leave(n)
 }
 
-// ColumnDef is used for parsing column definition from SQL.
+// ColumnDef is used for parsing column definition from SQL.   ColumnDef是用来定义解析后的column(列)的
 type ColumnDef struct {
 	node
 
-	Name    *ColumnName
-	Tp      *types.FieldType
-	Options []*ColumnOption
+	Name    *ColumnName		//列名
+	Tp      *types.FieldType	//列类型
+	Options []*ColumnOption		//列选项，如主键、自增等等
 }
 
 // Accept implements Node Accept interface.
@@ -400,41 +400,41 @@ type CreateTableStmt struct {
 	IfNotExists bool
 	Table       *TableName
 	ReferTable  *TableName
-	Cols        []*ColumnDef
-	Constraints []*Constraint
-	Options     []*TableOption
-	Partition   *PartitionOptions
+	Cols        []*ColumnDef		//列的描述(这个表的列的描述)
+	Constraints []*Constraint		//表约束
+	Options     []*TableOption		//table本身的一些信息
+	Partition   *PartitionOptions	//数据分区选项
 	OnDuplicate OnDuplicateCreateTableSelectType
-	Select      ResultSetNode
+	Select      ResultSetNode		//是一个语法，CREATE TABLE ... SELECT Syntax   https://docs.oracle.com/cd/E17952_01/mysql-5.5-en/create-table-select.html
 }
 
 // Accept implements Node Accept interface.
 func (n *CreateTableStmt) Accept(v Visitor) (Node, bool) {
-	newNode, skipChildren := v.Enter(n)
+	newNode, skipChildren := v.Enter(n)	//直接进入CreateTableStmt
 	if skipChildren {
 		return v.Leave(newNode)
 	}
 	n = newNode.(*CreateTableStmt)
-	node, ok := n.Table.Accept(v)
+	node, ok := n.Table.Accept(v)//进入CreateTableStmt的元素Table
 	if !ok {
 		return n, false
 	}
 	n.Table = node.(*TableName)
 	if n.ReferTable != nil {
-		node, ok = n.ReferTable.Accept(v)
+		node, ok = n.ReferTable.Accept(v)//进入CreateTableStmt的元素ReferTable
 		if !ok {
 			return n, false
 		}
 		n.ReferTable = node.(*TableName)
 	}
 	for i, val := range n.Cols {
-		node, ok = val.Accept(v)
+		node, ok = val.Accept(v)	//进入CreateTableStmt的元素cols[]
 		if !ok {
 			return n, false
 		}
 		n.Cols[i] = node.(*ColumnDef)
 	}
-	for i, val := range n.Constraints {
+	for i, val := range n.Constraints {	//进入CreateTableStmt的元素Constraints
 		node, ok = val.Accept(v)
 		if !ok {
 			return n, false
@@ -442,7 +442,7 @@ func (n *CreateTableStmt) Accept(v Visitor) (Node, bool) {
 		n.Constraints[i] = node.(*Constraint)
 	}
 	if n.Select != nil {
-		node, ok := n.Select.Accept(v)
+		node, ok := n.Select.Accept(v)  //进入CreateTableStmt的元素Select
 		if !ok {
 			return n, false
 		}
@@ -886,7 +886,7 @@ type PartitionDefinition struct {
 
 // PartitionOptions specifies the partition options.
 type PartitionOptions struct {
-	Tp          model.PartitionType
+	Tp          model.PartitionType	//数据分布的类型
 	Expr        ExprNode
 	ColumnNames []*ColumnName
 	Definitions []*PartitionDefinition

@@ -45,7 +45,7 @@ import (
 	"golang.org/x/net/context"
 )
 
-// tableCommon is shared by both Table and partition.
+// tableCommon is shared by both Table and partition.		一个表结构，表和分区共用的
 type tableCommon struct {
 	tableID int64
 	// physicalTableID is a unique int64 to identify a physical table.

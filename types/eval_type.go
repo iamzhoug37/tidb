@@ -13,7 +13,7 @@
 
 package types
 
-// EvalType indicates the specified types that arguments and result of a built-in function should be.
+// EvalType indicates the specified types that arguments and result of a built-in function should be.   主要在built-in 函数使用
 type EvalType byte
 
 const (

@@ -26,7 +26,7 @@ import (
 	"golang.org/x/net/context"
 )
 
-// Context is an interface for transaction and executive args environment.
+// Context is an interface for transaction and executive args environment.  事务和可执行参数的运行环境
 type Context interface {
 	// NewTxn creates a new transaction for further execution.
 	// If old transaction is valid, it is committed first.
@@ -102,11 +102,11 @@ func (t basicCtxType) String() string {
 
 // Context keys.
 const (
-	// QueryString is the key for original query string.
+	// QueryString is the key for original query string.  原始的查询字符串
 	QueryString basicCtxType = 1
 	// Initing is the key for indicating if the server is running bootstrap or upgrade job.
 	Initing basicCtxType = 2
-	// LastExecuteDDL is the key for whether the session execute a ddl command last time.
+	// LastExecuteDDL is the key for whether the session execute a ddl command last time.  表示这个session最后一次执行的是不是DDL语句
 	LastExecuteDDL basicCtxType = 3
 )
 

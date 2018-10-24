@@ -25,7 +25,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// SkipWithGrant causes the server to start without using the privilege system at all.
+// SkipWithGrant causes the server to start without using the privilege system at all.  表示server的权限系统还没有加载好呢
 var SkipWithGrant = false
 
 // privilege error codes.
@@ -41,8 +41,8 @@ var (
 
 var _ privilege.Manager = (*UserPrivileges)(nil)
 
-// UserPrivileges implements privilege.Manager interface.
-// This is used to check privilege for the current user.
+// UserPrivileges implements privilege.Manager interface.  用户权限继承于privilege.Manager接口
+// This is used to check privilege for the current user.   用来检查当前用户的权限的
 type UserPrivileges struct {
 	user string
 	host string
@@ -51,21 +51,21 @@ type UserPrivileges struct {
 
 // RequestVerification implements the Manager interface.
 func (p *UserPrivileges) RequestVerification(db, table, column string, priv mysql.PrivilegeType) bool {
-	if SkipWithGrant {
+	if SkipWithGrant {	//系统还没准备好权限，直接return true
 		return true
 	}
 
-	if p.user == "" && p.host == "" {
+	if p.user == "" && p.host == "" { //user与host为""
 		return true
 	}
 
-	// Skip check for INFORMATION_SCHEMA database.
+	// Skip check for INFORMATION_SCHEMA database.   跳过对INFORMATION_SCHEMA库的检查
 	// See https://dev.mysql.com/doc/refman/5.7/en/information-schema.html
 	if strings.EqualFold(db, "INFORMATION_SCHEMA") {
 		return true
 	}
 
-	mysqlPriv := p.Handle.Get()
+	mysqlPriv := p.Handle.Get() //从这个handle里面捞一个权限管理出来
 	return mysqlPriv.RequestVerification(p.user, p.host, db, table, column, priv)
 }
 

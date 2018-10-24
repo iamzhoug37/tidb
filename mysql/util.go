@@ -18,7 +18,7 @@ type lengthAndDecimal struct {
 	decimal int
 }
 
-// defaultLengthAndDecimal provides default Flen and Decimal for fields
+// defaultLengthAndDecimal provides default Flen and Decimal for fields  显示长度和显示精度
 // from CREATE TABLE when they are unspecified.
 var defaultLengthAndDecimal = map[byte]lengthAndDecimal{
 	TypeBit:        {1, 0},

@@ -371,7 +371,7 @@ func (d *ddl) start(ctx context.Context, ctxPool *pools.ResourcePool) {
 		for _, worker := range d.workers {
 			worker.wg.Add(1)
 			w := worker
-			go tidbutil.WithRecovery(
+			go tidbutil.WithRecovery(	//
 				func() { w.start(d.ddlCtx) },
 				func(r interface{}) {
 					if r != nil {
@@ -469,26 +469,26 @@ func (d *ddl) asyncNotifyWorker(jobTp model.ActionType) {
 	}
 
 	if jobTp == model.ActionAddIndex {
-		asyncNotify(d.workers[addIdxWorker].ddlJobCh)
+		asyncNotify(d.workers[addIdxWorker].ddlJobCh)//从这里可知道，addIndex与其他ddl操作是分开执行的
 	} else {
 		asyncNotify(d.workers[generalWorker].ddlJobCh)
 	}
 }
-
+//先给 job 获取一个 global job ID 然后放到 job queue 中去，然后检测到 history DDL job 队列中有对应的 job 后，返回
 func (d *ddl) doDDLJob(ctx sessionctx.Context, job *model.Job) error {
 	// For every DDL, we must commit current transaction.
-	if err := ctx.NewTxn(); err != nil {
+	if err := ctx.NewTxn(); err != nil {	//创建了一个新事务出来
 		return errors.Trace(err)
 	}
 
-	// Get a global job ID and put the DDL job in the queue.
+	// Get a global job ID and put the DDL job in the queue. 把job扔到queue里面
 	err := d.addDDLJob(ctx, job)
 	if err != nil {
 		return errors.Trace(err)
 	}
 	ctx.GetSessionVars().StmtCtx.IsDDLJobInQueue = true
 
-	// Notice worker that we push a new job and wait the job done.
+	// Notice worker that we push a new job and wait the job done. notify对方有job要处理了
 	d.asyncNotifyWorker(job.Type)
 	log.Infof("[ddl] start DDL job %s, Query:%s", job, job.Query)
 
@@ -511,7 +511,7 @@ func (d *ddl) doDDLJob(ctx sessionctx.Context, job *model.Job) error {
 		case <-ticker.C:
 		}
 
-		historyJob, err = d.getHistoryDDLJob(jobID)
+		historyJob, err = d.getHistoryDDLJob(jobID)//从历史ddl里面找这个job
 		if err != nil {
 			log.Errorf("[ddl] get history DDL job err %v, check again", err)
 			continue

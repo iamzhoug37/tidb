@@ -27,7 +27,7 @@ import (
 // ContextKey is the type of context's key
 type ContextKey string
 
-// RunInNewTxn will run the f in a new transaction environment.
+// RunInNewTxn will run the f in a new transaction environment.   在一个新的transcation环境下面运行函数f
 func RunInNewTxn(store Storage, retryable bool, f func(txn Transaction) error) error {
 	var (
 		err           error
@@ -35,7 +35,7 @@ func RunInNewTxn(store Storage, retryable bool, f func(txn Transaction) error) e
 		txn           Transaction
 	)
 	for i := uint(0); i < maxRetryCnt; i++ {
-		txn, err = store.Begin()
+		txn, err = store.Begin()	//开始一个事务
 		if err != nil {
 			log.Errorf("[kv] RunInNewTxn error - %v", err)
 			return errors.Trace(err)
@@ -57,7 +57,7 @@ func RunInNewTxn(store Storage, retryable bool, f func(txn Transaction) error) e
 			return errors.Trace(err)
 		}
 
-		err = txn.Commit(context.Background())
+		err = txn.Commit(context.Background())	//事务提交
 		if err == nil {
 			break
 		}
