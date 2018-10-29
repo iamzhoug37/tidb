@@ -146,7 +146,7 @@ func (b *planBuilder) build(node ast.Node) (Plan, error) {
 	case *ast.TraceStmt:
 		return b.buildTrace(x)
 	case *ast.InsertStmt:
-		return b.buildInsert(x)
+		return b.buildInsert(x)	//insert语句
 	case *ast.LoadDataStmt:
 		return b.buildLoadData(x)
 	case *ast.LoadStatsStmt:
@@ -164,7 +164,7 @@ func (b *planBuilder) build(node ast.Node) (Plan, error) {
 	case *ast.DoStmt:
 		return b.buildDo(x)
 	case *ast.SetStmt:
-		return b.buildSet(x)
+		return b.buildSet(x)	//set xxx  例如set golbal max_allowed_packet=000000000;
 	case *ast.AnalyzeTableStmt:
 		return b.buildAnalyze(x)
 	case *ast.BinlogStmt, *ast.FlushStmt, *ast.UseStmt,
@@ -221,8 +221,8 @@ func (b *planBuilder) buildSet(v *ast.SetStmt) (Plan, error) {
 			IsGlobal: vars.IsGlobal,
 			IsSystem: vars.IsSystem,
 		}
-		if _, ok := vars.Value.(*ast.DefaultExpr); !ok {
-			if cn, ok2 := vars.Value.(*ast.ColumnNameExpr); ok2 && cn.Name.Table.L == "" {
+		if _, ok := vars.Value.(*ast.DefaultExpr); !ok {//不是DefaultExpr
+			if cn, ok2 := vars.Value.(*ast.ColumnNameExpr); ok2 && cn.Name.Table.L == "" {//如果ColumnNameExpr的table为""，那就newValueExpr
 				// Convert column name expression to string value expression.
 				vars.Value = ast.NewValueExpr(cn.Name.Name.O)
 			}

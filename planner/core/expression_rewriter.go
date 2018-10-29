@@ -73,7 +73,7 @@ func (b *planBuilder) rewriteInsertOnDuplicateUpdate(exprNode ast.ExprNode, mock
 	return expr, errors.Trace(err)
 }
 
-// rewrite function rewrites ast expr to expression.Expression.
+// rewrite function rewrites ast expr to expression.Expression.		把传入的东西重写成expression以及logical plan
 // aggMapper maps ast.AggregateFuncExpr to the columns offset in p's output schema.
 // asScalar means whether this expression must be treated as a scalar expression.
 // And this function returns a result expression, a new plan that may have apply or semi-join.

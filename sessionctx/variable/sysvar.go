@@ -69,7 +69,7 @@ const (
 	CodeTruncatedWrongValue terror.ErrCode = mysql.ErrTruncatedWrongValue
 )
 
-// Variable errors
+// Variable errors  变量的错误类型，相当于所有的error都是他们创建的，所有的sql输出的错误已经包裹在这个错误对象里面了
 var (
 	UnknownStatusVar       = terror.ClassVariable.New(CodeUnknownStatusVar, "unknown status variable")
 	UnknownSystemVar       = terror.ClassVariable.New(CodeUnknownSystemVar, mysql.MySQLErrName[mysql.ErrUnknownSystemVariable])

@@ -54,7 +54,7 @@ type preprocessor struct {
 }
 
 func (p *preprocessor) Enter(in ast.Node) (out ast.Node, skipChildren bool) {//对node进行pre process 预处理(主要对这个stmt进行预处理，比如合法性检查，不全字段的补齐啥的)
-	switch node := in.(type) {  //根据输入的类型来选择不同的语句执行
+	switch node := in.(type) {  //preprocessor enter检查语法
 	case *ast.CreateTableStmt:
 		p.inCreateOrDropTable = true
 		p.checkCreateTableGrammar(node)
@@ -87,7 +87,7 @@ func (p *preprocessor) Enter(in ast.Node) (out ast.Node, skipChildren bool) {//�
 	return in, p.err != nil
 }
 
-func (p *preprocessor) Leave(in ast.Node) (out ast.Node, ok bool) {
+func (p *preprocessor) Leave(in ast.Node) (out ast.Node, ok bool) {//preprocessor leave的时候检查
 	switch x := in.(type) {
 	case *ast.CreateTableStmt:	//创建表的时候会进来
 		p.inCreateOrDropTable = false

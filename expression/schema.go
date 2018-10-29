@@ -32,7 +32,7 @@ func (ki KeyInfo) Clone() KeyInfo {
 	return result
 }
 
-// Schema stands for the row schema and unique key information get from input.
+// Schema stands for the row schema and unique key information get from input.  一个行的schema
 type Schema struct {
 	Columns []*Column
 	Keys    []KeyInfo

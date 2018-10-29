@@ -78,7 +78,7 @@ func Optimize(ctx sessionctx.Context, node ast.Node, is infoschema.InfoSchema) (
 
 	// Maybe it's better to move this to Preprocess, but check privilege need table
 	// information, which is collected into visitInfo during logical plan builder.
-	if pm := privilege.GetPrivilegeManager(ctx); pm != nil {
+	if pm := privilege.GetPrivilegeManager(ctx); pm != nil {//检查权限
 		if !checkPrivilege(pm, builder.visitInfo) {
 			return nil, errors.New("privilege check fail")
 		}

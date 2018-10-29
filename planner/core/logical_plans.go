@@ -261,7 +261,7 @@ type LogicalMaxOneRow struct {
 	baseLogicalPlan
 }
 
-// LogicalTableDual represents a dual table plan.
+// LogicalTableDual represents a dual table plan.  双重表计划？
 type LogicalTableDual struct {
 	logicalSchemaProducer
 

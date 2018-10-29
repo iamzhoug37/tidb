@@ -514,9 +514,9 @@ func (b *executorBuilder) buildSimple(v *plannercore.Simple) Executor {
 }
 
 func (b *executorBuilder) buildSet(v *plannercore.Set) Executor {
-	base := newBaseExecutor(b.ctx, v.Schema(), v.ExplainID())
+	base := newBaseExecutor(b.ctx, v.Schema(), v.ExplainID())	//先创建了一个基础的executor
 	base.initCap = chunk.ZeroCapacity
-	e := &SetExecutor{
+	e := &SetExecutor{	//用baseExecutor封装了一个SetExecutor
 		baseExecutor: base,
 		vars:         v.VarAssigns,
 	}

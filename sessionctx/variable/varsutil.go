@@ -169,13 +169,13 @@ func ValidateGetSystemVar(name string, isGlobal bool) error {
 }
 
 func checkUInt64SystemVar(name, value string, min, max uint64, vars *SessionVars) (string, error) {
-	if value[0] == '-' {
+	if value[0] == '-' {	//为负数的时候，给出警告
 		_, err := strconv.ParseInt(value, 10, 64)
 		if err != nil {
 			return value, ErrWrongTypeForVar.GenWithStackByArgs(name)
 		}
 		vars.StmtCtx.AppendWarning(ErrTruncatedWrongValue.GenWithStackByArgs(name, value))
-		return fmt.Sprintf("%d", min), nil
+		return fmt.Sprintf("%d", min), nil		//负数的话，return的是最小值
 	}
 	val, err := strconv.ParseUint(value, 10, 64)
 	if err != nil {
@@ -187,7 +187,7 @@ func checkUInt64SystemVar(name, value string, min, max uint64, vars *SessionVars
 	}
 	if val > max {
 		vars.StmtCtx.AppendWarning(ErrTruncatedWrongValue.GenWithStackByArgs(name, value))
-		return fmt.Sprintf("%d", max), nil
+		return fmt.Sprintf("%d", max), nil	//大于最大值，就return最大值
 	}
 	return value, nil
 }
@@ -208,7 +208,7 @@ func checkInt64SystemVar(name, value string, min, max int64, vars *SessionVars) 
 	return value, nil
 }
 
-// ValidateSetSystemVar checks if system variable satisfies specific restriction.
+// ValidateSetSystemVar checks if system variable satisfies specific restriction.  验证是否参数受限
 func ValidateSetSystemVar(vars *SessionVars, name string, value string) (string, error) {
 	if strings.EqualFold(value, "DEFAULT") {
 		if val := GetSysVar(name); val != nil {
@@ -244,6 +244,8 @@ func ValidateSetSystemVar(vars *SessionVars, name string, value string) (string,
 		return checkUInt64SystemVar(name, value, 0, 2, vars)
 	case InnodbLockWaitTimeout:
 		return checkUInt64SystemVar(name, value, 1, 1073741824, vars)
+	case MaxAllowedPacket:
+		return checkUInt64SystemVar(name , value , 1024, 1073741824 , vars)
 	case MaxConnections:
 		return checkUInt64SystemVar(name, value, 1, 100000, vars)
 	case MaxConnectErrors:

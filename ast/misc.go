@@ -300,13 +300,13 @@ const (
 	SetNames = "SetNAMES"
 )
 
-// VariableAssignment is a variable assignment struct.
+// VariableAssignment is a variable assignment struct.  变量分配结构   xx=yy
 type VariableAssignment struct {
 	node
-	Name     string
-	Value    ExprNode
-	IsGlobal bool
-	IsSystem bool
+	Name     string		//这个变量的名字
+	Value    ExprNode	//
+	IsGlobal bool		//是否是全局的
+	IsSystem bool		//是否是系统的
 
 	// ExtendValue is a way to store extended info.
 	// VariableAssignment should be able to store information for SetCharset/SetPWD Stmt.

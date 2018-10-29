@@ -110,7 +110,7 @@ func (e *SetExecutor) getSynonyms(varName string) []string {
 	return synonyms
 }
 
-func (e *SetExecutor) setSysVariable(name string, v *expression.VarAssignment) error {
+func (e *SetExecutor) setSysVariable(name string, v *expression.VarAssignment) error {//设置系统变量
 	sessionVars := e.ctx.GetSessionVars()
 	sysVar := variable.GetSysVar(name)
 	if sysVar == nil {

@@ -311,12 +311,12 @@ func (a *ExecStmt) buildExecutor(ctx sessionctx.Context) (Executor, error) {
 	}
 
 	b := newExecutorBuilder(ctx, a.InfoSchema)
-	e := b.build(a.Plan)
+	e := b.build(a.Plan)	//生成executor
 	if b.err != nil {
 		return nil, errors.Trace(b.err)
 	}
 
-	// ExecuteExec is not a real Executor, we only use it to build another Executor from a prepared statement.
+	// ExecuteExec is not a real Executor, we only use it to build another Executor from a prepared statement.  如果e不是一个真正的执行器，我们仅需要使用他从prepared statement语句来构建一个新的执行器
 	if executorExec, ok := e.(*ExecuteExec); ok {
 		err := executorExec.Build()
 		if err != nil {

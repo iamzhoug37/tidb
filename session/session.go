@@ -544,7 +544,7 @@ func (s *session) ExecRestrictedSQL(sctx sessionctx.Context, sql string) ([]chun
 	metrics.SessionRestrictedSQLCounter.Inc()
 
 	startTime := time.Now()
-	recordSets, err := se.Execute(ctx, sql)
+	recordSets, err := se.Execute(ctx, sql)	//执行这条sql
 	if err != nil {
 		return nil, nil, errors.Trace(err)
 	}
@@ -679,7 +679,7 @@ func (s *session) GetGlobalSysVar(name string) (string, error) {
 }
 
 // SetGlobalSysVar implements GlobalVarAccessor.SetGlobalSysVar interface.
-func (s *session) SetGlobalSysVar(name, value string) error {
+func (s *session) SetGlobalSysVar(name, value string) error {//设置全局的系统变量
 	if name == variable.SQLModeVar {
 		value = mysql.FormatSQLModeStr(value)
 		if _, err := mysql.GetSQLMode(value); err != nil {
@@ -694,7 +694,7 @@ func (s *session) SetGlobalSysVar(name, value string) error {
 	}
 	sql := fmt.Sprintf(`REPLACE %s.%s VALUES ('%s', '%s');`,
 		mysql.SystemDB, mysql.GlobalVariablesTable, strings.ToLower(name), sVal)
-	_, _, err = s.ExecRestrictedSQL(s, sql)
+	_, _, err = s.ExecRestrictedSQL(s, sql)	//执行限制模式sql
 	return errors.Trace(err)
 }
 

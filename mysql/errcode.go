@@ -13,7 +13,7 @@
 
 package mysql
 
-// MySQL error code.
+// MySQL error code.		mysql的错误码表
 // This value is numeric. It is not portable to other database systems.
 const (
 	ErrErrorFirst                                            uint16 = 1000
