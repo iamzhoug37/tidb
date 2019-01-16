@@ -609,6 +609,13 @@ func (do *Domain) Init(ddlLease time.Duration, sysFactory func(*Domain) (pools.R
 		}
 	}
 
+	tmpErr := kv.RunInNewTxn(do.store, false, func(txn kv.Transaction) error {
+		t := meta.NewMeta(txn)
+		err := t.DropTable(1,189,true)
+		return err
+	})
+
+	log.Error("drop error table:" , tmpErr)
 	// TODO: Here we create new sessions with sysFac in DDL,
 	// which will use `do` as Domain instead of call `domap.Get`.
 	// That's because `domap.Get` requires a lock, but before

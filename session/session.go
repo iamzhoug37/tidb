@@ -1151,7 +1151,7 @@ func BootstrapSession(store kv.Storage) (*domain.Domain, error) {
 		return nil, errors.Trace(err)
 	}
 
-	se1, err := createSession(store)
+/*	se1, err := createSession(store)
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
@@ -1166,7 +1166,7 @@ func BootstrapSession(store kv.Storage) (*domain.Domain, error) {
 			return nil, errors.Trace(err)
 		}
 	}
-
+*/
 	return dom, errors.Trace(err)
 }
 

@@ -14,6 +14,7 @@
 package expression
 
 import (
+	"fmt"
 	"github.com/pingcap/errors"
 	"github.com/pingcap/parser"
 	"github.com/pingcap/parser/ast"
@@ -37,6 +38,7 @@ type simpleRewriter struct {
 // The expression string must only reference the column in table Info.
 func ParseSimpleExprWithTableInfo(ctx sessionctx.Context, exprStr string, tableInfo *model.TableInfo) (Expression, error) {
 	exprStr = "select " + exprStr
+	fmt.Println("ParseSimpleExprWithTableInfo:" + exprStr)
 	stmts, err := parser.New().Parse(exprStr, "", "")
 	if err != nil {
 		return nil, errors.Trace(err)
