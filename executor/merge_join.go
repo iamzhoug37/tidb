@@ -331,16 +331,18 @@ func (mw *mergeJoinMergeWorker) joinToChunk(ctx context.Context) {
 		}
 
 		if cmpResult < 0 {
-			mw.joiner.onMissMatch(mw.outerRow, joinResult.chk)
+			for ; mw.outerRow != mw.outerIter4Row.End() ; {
+				mw.joiner.onMissMatch(mw.outerRow, joinResult.chk)
 
-			mw.outerRow = mw.outerIter4Row.Next()
-			mw.hasMatch = false
+				mw.outerRow = mw.outerIter4Row.Next()
+				mw.hasMatch = false
 
-			if joinResult.chk.NumRows() == mw.maxChunkSize {
-				mw.joinResultCh <- joinResult
-				ok, joinResult = mw.getNewJoinResult()
-				if !ok {
-					return
+				if joinResult.chk.NumRows() == mw.maxChunkSize {
+					mw.joinResultCh <- joinResult
+					ok, joinResult = mw.getNewJoinResult()
+					if !ok {
+						return
+					}
 				}
 			}
 			continue
